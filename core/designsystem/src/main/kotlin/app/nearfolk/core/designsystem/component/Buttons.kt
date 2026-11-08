@@ -20,10 +20,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.graphics.graphicsLayer
+import app.nearfolk.core.designsystem.theme.NfMotion
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -75,11 +79,11 @@ fun NfButton(
     val shape = if (size == NfButtonSize.Small) NfShapes.small else NfShapes.medium
     Box(
         modifier = modifier
-            .pressScale(interaction)
+            .buttonLayer(interaction, enabled)
             .defaultMinSize(minHeight = size.height)
             .clip(shape)
             .background(colors.container)
-            .then(if (colors.border != null) Modifier.border(1.dp, colors.border, shape) else Modifier)
+            .border(1.dp, colors.border ?: Color.Transparent, shape)
             .clickable(
                 interactionSource = interaction,
                 indication = ripple(color = colors.content),
@@ -90,7 +94,6 @@ fun NfButton(
                     onClick()
                 },
             )
-            .alpha(if (enabled) 1f else 0.45f)
             .padding(PaddingValues(horizontal = size.horizontalPadding)),
         contentAlignment = Alignment.Center,
     ) {
@@ -144,11 +147,11 @@ fun NfIconButton(
     val haptics = LocalAppHaptics.current
     Box(
         modifier = modifier
-            .pressScale(interaction, pressed = 0.9f)
+            .buttonLayer(interaction, enabled, pressedScale = 0.9f)
             .size(size)
             .clip(NfShapes.medium)
             .background(colors.container)
-            .then(if (colors.border != null) Modifier.border(1.dp, colors.border, NfShapes.medium) else Modifier)
+            .border(1.dp, colors.border ?: Color.Transparent, NfShapes.medium)
             .clickable(
                 interactionSource = interaction,
                 indication = ripple(color = colors.content),
@@ -158,10 +161,39 @@ fun NfIconButton(
                     haptics.perform(HapticKind.Tap)
                     onClick()
                 },
-            )
-            .alpha(if (enabled) 1f else 0.4f),
+            ),
         contentAlignment = Alignment.Center,
     ) {
         Icon(icon, contentDescription = contentDescription, tint = tint ?: colors.content, modifier = Modifier.size(iconSize))
+    }
+}
+
+/** Opacity of a button whose action is not available yet. Dim, but clearly still there. */
+private const val DisabledAlpha = 0.38f
+
+/**
+ * Press scale and enabled state in one graphics layer at a fixed position in
+ * the modifier chain.
+ *
+ * The chain must keep the same shape on every recomposition. Toggling a
+ * conditional `Modifier.alpha` (which drops its layer at full opacity) inside
+ * an outer scale layer left the outer layer drawing a stale recording, so
+ * buttons vanished as soon as they became enabled while still taking taps.
+ * The alpha also covers the background now, so disabled buttons read as
+ * disabled instead of only dimming their label.
+ */
+@Composable
+private fun Modifier.buttonLayer(
+    interaction: MutableInteractionSource,
+    enabled: Boolean,
+    pressedScale: Float = 0.965f,
+): Modifier {
+    val pressed by interaction.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (pressed && enabled) pressedScale else 1f, NfMotion.snappy(), label = "buttonScale")
+    val alpha by animateFloatAsState(if (enabled) 1f else DisabledAlpha, NfMotion.settle(), label = "buttonAlpha")
+    return graphicsLayer {
+        scaleX = scale
+        scaleY = scale
+        this.alpha = alpha
     }
 }

@@ -45,5 +45,8 @@ sealed interface SendResult {
     /** First contact is capped until the other person replies. */
     data class WaitForReply(val limit: Int) : SendResult
     data object Blocked : SendResult
+
+    /** Someone new wrote first; accept the request before replying. */
+    data object RequestPending : SendResult
     data object Empty : SendResult
 }

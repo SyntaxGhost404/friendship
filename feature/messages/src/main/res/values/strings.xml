@@ -11,7 +11,7 @@
     <string name="msg_empty_cta">Go to Discover</string>
     <string name="msg_requests_empty_title">No requests</string>
     <string name="msg_requests_empty_body">When someone new writes to you, it shows up here first. Reply to accept.</string>
-    <string name="msg_requests_hint">People you haven’t talked to yet. They can’t see if you read their message until you reply.</string>
+    <string name="msg_requests_hint">People you haven’t talked to yet. Accept a request to reply.</string>
     <string name="msg_archived">Archived chats</string>
     <string name="msg_archived_title">Archived</string>
     <string name="msg_archived_empty">Nothing archived. Chats with people you block end up here.</string>
@@ -31,7 +31,7 @@
     <string name="chat_safety_title">Stay safe</string>
     <string name="chat_safety_body">Never share passwords, login codes, bank details or your home address. Nearfolk will never ask for them in a chat.</string>
     <string name="chat_request_title">%1$s wants to chat</string>
-    <string name="chat_request_body">Reply to accept. If this feels off, you can block or delete it.</string>
+    <string name="chat_request_body">Accept to start replying. If something feels off, block or delete the request.</string>
     <string name="chat_request_accept">Accept</string>
     <string name="chat_wait">Wait for %1$s to reply before sending more.</string>
     <string name="chat_blocked">You blocked %1$s. Unblock to message each other again.</string>

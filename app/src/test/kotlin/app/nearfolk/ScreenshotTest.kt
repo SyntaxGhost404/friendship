@@ -112,6 +112,27 @@ class ScreenshotTest {
         )
     }
 
+    @Test fun chatRequestDark() = shot("chat_request", true) {
+        val convo = Fixtures.conversations[1].copy(state = app.nearfolk.core.model.ConversationState.Request)
+        ChatScreen(
+            state = ChatUiState(false, convo, listOf(convo.lastMessage!!), showSafetyBanner = false, allowance = null, blocked = false),
+            draft = "",
+            onDraft = {}, onSend = {}, onBack = {}, onOpenProfile = {}, onDismissSafety = {}, onAccept = {}, onToggleMute = {},
+            onReport = { _, _ -> }, onBlock = {}, onUnblock = {}, onDelete = {},
+            now = Fixtures.now,
+        )
+    }
+
+    @Test fun chatTypingLight() = shot("chat_typing", false) {
+        ChatScreen(
+            state = ChatUiState(false, Fixtures.conversations.first().copy(peerIsTyping = false), Fixtures.thread, showSafetyBanner = false, allowance = null, blocked = false),
+            draft = "Sounds good",
+            onDraft = {}, onSend = {}, onBack = {}, onOpenProfile = {}, onDismissSafety = {}, onAccept = {}, onToggleMute = {},
+            onReport = { _, _ -> }, onBlock = {}, onUnblock = {}, onDelete = {},
+            now = Fixtures.now,
+        )
+    }
+
     @Test fun profileDark() = profile(true)
     @Test fun profileLight() = profile(false)
 

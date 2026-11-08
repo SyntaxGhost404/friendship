@@ -1,6 +1,13 @@
 package app.nearfolk
 
+import android.graphics.Color
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
@@ -14,11 +21,13 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.takahirom.roborazzi.captureRoboImage
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import kotlin.math.abs
 
 /**
  * Drives the real app: dependency graph, database, preferences, navigation
@@ -37,25 +46,62 @@ class AppFlowTest {
     private fun waitForText(text: String, timeout: Long = 10_000) =
         rule.waitUntilAtLeastOneExists(hasText(text), timeout)
 
+    private fun luminance(c: Int) =
+        (0.2126 * Color.red(c) + 0.7152 * Color.green(c) + 0.0722 * Color.blue(c)) / 255.0
+
+    /**
+     * Samples the button surface (inside its padding, away from the label) and
+     * compares it with the screen background. A vanished button matches the
+     * background exactly.
+     */
+    private fun buttonContrast(node: SemanticsNodeInteraction): Double {
+        rule.mainClock.advanceTimeBy(600)
+        rule.waitForIdle()
+        val button = node.captureToImage().asAndroidBitmap()
+        val screen = rule.onRoot().captureToImage().asAndroidBitmap()
+        val surface = button.getPixel(5, button.height / 2)
+        val background = screen.getPixel(2, screen.height / 3)
+        return abs(luminance(surface) - luminance(background))
+    }
+
+    private fun continueButton() = rule.onNode(hasText("Continue") and hasClickAction())
+
+    /** Visible either way, and clearly brighter once the step is complete. */
+    private fun assertContinue(enabled: Boolean) {
+        val contrast = buttonContrast(continueButton())
+        assertTrue("Continue button is not visible (contrast $contrast)", contrast > 0.08)
+        if (enabled) continueButton().assertIsEnabled() else continueButton().assertIsNotEnabled()
+    }
+
     @Test
     fun onboardingToFirstConversation() {
         waitForText("Create a profile")
         rule.onNodeWithText("Create a profile").performClick()
 
-        rule.onNode(hasSetTextAction()).performTextInput("Rae")
+        assertContinue(enabled = false)
+        rule.onNode(hasSetTextAction()).performTextInput("R")
+        assertContinue(enabled = false)
+        rule.onNode(hasSetTextAction()).performTextInput("ae")
+        assertContinue(enabled = false)
         rule.onNodeWithText("Female").performClick()
+        assertContinue(enabled = true)
         rule.onNodeWithText("Continue").performClick()
 
         waitForText("When were you born?")
+        assertContinue(enabled = false)
         rule.onNodeWithText("Pick a date").performClick()
         rule.waitUntilAtLeastOneExists(hasContentDescription("Switch to text input mode", substring = true, ignoreCase = true))
         rule.onNodeWithContentDescription("Switch to text input mode", substring = true, ignoreCase = true).performClick()
         rule.onNode(hasSetTextAction()).performTextInput("05031996")
         rule.onNodeWithText("Done").performClick()
+        assertContinue(enabled = true)
         rule.onNodeWithText("Continue").performClick()
 
         waitForText("A few ground rules")
+        assertContinue(enabled = false)
         rule.onNodeWithText("I agree to follow the community guidelines").performClick()
+        assertContinue(enabled = true)
+        rule.onRoot().captureRoboImage("build/screenshots/flow_0_rules.png")
         rule.onNodeWithText("Continue").performClick()
 
         waitForText("Not now")
@@ -76,8 +122,15 @@ class AppFlowTest {
         rule.onNodeWithText("Message").performClick()
 
         waitForText("Stay safe")
-        rule.onNode(hasSetTextAction()).performTextInput("Hi Amara, how is your week going?")
-        rule.onNodeWithContentDescription("Send").performClick()
+        val send = rule.onNodeWithContentDescription("Send")
+        send.assertIsNotEnabled()
+        assertTrue("Send button hidden while empty", buttonContrast(send) > 0.08)
+        rule.onNode(hasSetTextAction()).performTextInput("H")
+        send.assertIsEnabled()
+        assertTrue("Send button vanished while typing", buttonContrast(send) > 0.08)
+        rule.onNode(hasSetTextAction()).performTextInput("i Amara, how is your week going?")
+        rule.onRoot().captureRoboImage("build/screenshots/flow_3a_typing.png")
+        send.performClick()
         waitForText("Hi Amara, how is your week going?")
 
         // The other side reads it within a few seconds.

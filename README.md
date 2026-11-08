@@ -8,16 +8,16 @@ A native Android app for meeting strangers and talking at your own pace. It grew
 | --- | --- | --- | --- |
 | ![](docs/screenshots/welcome_dark.png) | ![](docs/screenshots/discover_light.png) | ![](docs/screenshots/flow_2_profile.png) | ![](docs/screenshots/chat_dark.png) |
 
-| Messages | You | Journal lock | Components |
+| Messages | Chat request | You | Journal lock |
 | --- | --- | --- | --- |
-| ![](docs/screenshots/inbox_dark.png) | ![](docs/screenshots/you_dark.png) | ![](docs/screenshots/passcode_dark.png) | ![](docs/screenshots/gallery_light.png) |
+| ![](docs/screenshots/inbox_dark.png) | ![](docs/screenshots/chat_request_dark.png) | ![](docs/screenshots/you_dark.png) | ![](docs/screenshots/passcode_dark.png) |
 
 ## What works today
 
 - **Onboarding**: name, gender, date of birth (18+ only), country, community guidelines, notification permission.
 - **Discover**: dense member list with avatar, presence, age, gender, sign, city and a bio snippet. Gender chips, a filter sheet (online only, countries, age range for Plus), pull to refresh, and typo tolerant name search ("amra" finds "Amara").
 - **Profiles**: cover image, avatar, exact last seen time, status, day counter, details, voice intro, highlights grid with a full screen viewer, and an endless post stream with likes and comments. Report and block from the overflow menu.
-- **Messages**: chats and requests (first messages from people you have not answered), archived threads, unread counts, typing state, delivery and read marks, day separators, grouped bubbles, long press to copy.
+- **Messages**: chats and requests (first messages from people you have not accepted yet; the message bar stays hidden until you accept, block or delete), archived threads, unread counts, typing state, delivery and read marks, day separators, grouped bubbles, long press to copy.
 - **Safety**: dismissible safety notice per chat, a cap of three messages until the other person replies, report with reasons, block with confirmation (archives the thread), delete chat with confirmation, blocked members list.
 - **You**: profile preview as others see it, edit identity, avatar and cover crop (pan and pinch in a squircle frame), voice intro recording, posts, highlights, and an activity feed for likes and comments.
 - **Journal**: private or public entries with a mood, protected by a 6 digit passcode (salted PBKDF2, escalating lockout, relocks when the app goes to the background).

@@ -100,6 +100,7 @@ internal class LocalChatRepository @Inject constructor(
         if (clean.isEmpty()) return SendResult.Empty
         val convo = conversations.get(conversationId) ?: return SendResult.Empty
         if (safety.isBlocked(convo.peerId)) return SendResult.Blocked
+        if (convo.state == ConversationState.Request.name) return SendResult.RequestPending
         if (!convo.peerHasReplied && messages.countFrom(conversationId, SELF_ID) >= ProfileRules.FIRST_CONTACT_LIMIT) {
             return SendResult.WaitForReply(ProfileRules.FIRST_CONTACT_LIMIT)
         }
@@ -109,8 +110,6 @@ internal class LocalChatRepository @Inject constructor(
             messages.insert(message)
             conversations.upsert(
                 convo.copy(
-                    // Replying to a request accepts it.
-                    state = if (convo.state == ConversationState.Request.name) ConversationState.Active.name else convo.state,
                     lastActivityAt = now,
                     lastMessageId = message.id,
                     lastMessageText = clean,

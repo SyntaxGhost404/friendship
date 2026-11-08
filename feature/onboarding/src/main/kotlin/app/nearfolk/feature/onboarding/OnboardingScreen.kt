@@ -399,7 +399,7 @@ private fun Rules(agreed: Boolean, onAgree: (Boolean) -> Unit) {
         Rule(Icons.Rounded.VerifiedUser, stringResource(R.string.onb_rule_adults_title), stringResource(R.string.onb_rule_adults_body))
         Rule(Icons.Rounded.PanTool, stringResource(R.string.onb_rule_consent_title), stringResource(R.string.onb_rule_consent_body))
         Rule(Icons.Rounded.Lock, stringResource(R.string.onb_rule_safe_title), stringResource(R.string.onb_rule_safe_body))
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             LinkText(stringResource(R.string.onb_read_full)) { document = AppDocument.Guidelines }
             LinkText(stringResource(R.string.onb_read_privacy)) { document = AppDocument.Privacy }
         }

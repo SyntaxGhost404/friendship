@@ -293,20 +293,6 @@ fun ChatScreen(
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
             )
         }
-        if (convo.state == ConversationState.Request && !state.blocked) {
-            NfNotice(
-                title = stringResource(R.string.chat_request_title, peer.displayName),
-                text = stringResource(R.string.chat_request_body),
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                action = {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        NfButton(stringResource(R.string.chat_request_accept), onAccept, size = NfButtonSize.Small)
-                        NfButton(stringResource(R.string.chat_block), { blocking = true }, size = NfButtonSize.Small, style = NfButtonStyle.Outline)
-                        NfButton(stringResource(app.nearfolk.core.ui.R.string.ui_delete), { deleting = true }, size = NfButtonSize.Small, style = NfButtonStyle.Quiet)
-                    }
-                },
-            )
-        }
 
         val rows = remember(state.messages, time) { buildRows(state.messages, time).asReversed() }
         val listState = rememberLazyListState()
@@ -343,6 +329,12 @@ fun ChatScreen(
 
         val allowance = state.allowance
         when {
+            convo.state == ConversationState.Request && !state.blocked -> RequestDecision(
+                name = peer.displayName,
+                onAccept = onAccept,
+                onBlock = { blocking = true },
+                onDelete = { deleting = true },
+            )
             state.blocked -> Text(
                 stringResource(R.string.chat_blocked, peer.displayName),
                 style = Nf.type.bodySmall,
@@ -420,6 +412,33 @@ fun ChatScreen(
             onDismiss = { deleting = false },
             destructive = true,
         )
+    }
+}
+
+/**
+ * Shown in place of the message bar until a request is accepted, so nobody
+ * can reply by accident. Three equal width choices span the card.
+ */
+@Composable
+private fun RequestDecision(name: String, onAccept: () -> Unit, onBlock: () -> Unit, onDelete: () -> Unit) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .windowInsetsPadding(WindowInsets.navigationBars)
+            .padding(12.dp)
+            .clip(NfShapes.large)
+            .background(Nf.colors.surface)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(stringResource(R.string.chat_request_title, name), style = Nf.type.titleSmall, color = Nf.colors.textPrimary)
+        Text(stringResource(R.string.chat_request_body), style = Nf.type.bodySmall, color = Nf.colors.textSecondary)
+        Spacer(Modifier.height(10.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            NfButton(stringResource(R.string.chat_request_accept), onAccept, size = NfButtonSize.Medium, modifier = Modifier.weight(1f))
+            NfButton(stringResource(R.string.chat_block), onBlock, size = NfButtonSize.Medium, style = NfButtonStyle.Secondary, modifier = Modifier.weight(1f))
+            NfButton(stringResource(app.nearfolk.core.ui.R.string.ui_delete), onDelete, size = NfButtonSize.Medium, style = NfButtonStyle.Secondary, modifier = Modifier.weight(1f))
+        }
     }
 }
 

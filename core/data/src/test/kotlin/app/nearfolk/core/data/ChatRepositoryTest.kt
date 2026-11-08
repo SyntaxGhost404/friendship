@@ -12,6 +12,7 @@ import app.nearfolk.core.data.local.LocalChatRepository
 import app.nearfolk.core.data.platform.AppVisibility
 import app.nearfolk.core.data.platform.ChatNotifier
 import app.nearfolk.core.database.NearfolkDatabase
+import app.nearfolk.core.database.entity.ConversationEntity
 import app.nearfolk.core.database.entity.MemberEntity
 import app.nearfolk.core.datastore.NearfolkPreferences
 import app.nearfolk.core.model.ConversationState
@@ -115,6 +116,23 @@ class ChatRepositoryTest {
         repo.delete(id)
         assertEquals(null, repo.conversation(id).first())
         assertTrue(repo.messages(id).first().isEmpty())
+    }
+
+    @Test
+    fun requestsMustBeAcceptedBeforeReplying() = runBlocking {
+        val id = "req-1"
+        db.conversationDao().upsert(
+            ConversationEntity(
+                id = id, peerId = peer, state = ConversationState.Request.name, createdAt = 0, lastActivityAt = 0,
+                unreadCount = 1, muted = false, peerHasReplied = true, lastMessageId = null, lastMessageText = null,
+                lastMessageSenderId = null, lastMessageAt = null, lastMessageStatus = null,
+            ),
+        )
+        assertEquals(SendResult.RequestPending, repo.send(id, "hi back"))
+        assertTrue(repo.messages(id).first().isEmpty())
+        repo.acceptRequest(id)
+        assertEquals(ConversationState.Active, repo.conversation(id).first()?.state)
+        assertEquals(SendResult.Sent, repo.send(id, "hi back"))
     }
 
     @Test
