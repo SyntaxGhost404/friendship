@@ -23,7 +23,6 @@
     <string name="profile_comments_title">Comments</string>
     <string name="profile_comments_empty">No comments yet. Say something nice.</string>
     <string name="profile_comment_hint">Add a comment</string>
-    <string name="profile_comment_send">Post comment</string>
     <string name="profile_back">Back</string>
     <string name="profile_more">More options</string>
 </resources>

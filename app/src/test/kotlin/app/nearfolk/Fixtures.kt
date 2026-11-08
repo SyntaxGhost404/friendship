@@ -1,6 +1,9 @@
 package app.nearfolk
 
+import app.nearfolk.core.model.Attachment
+import app.nearfolk.core.model.AttachmentKind
 import app.nearfolk.core.model.Conversation
+import app.nearfolk.core.model.DraftAttachment
 import app.nearfolk.core.model.ConversationState
 import app.nearfolk.core.model.DeliveryStatus
 import app.nearfolk.core.model.DiscoverFilter
@@ -79,6 +82,12 @@ object Fixtures {
         msg("4", false, "Oh you asked the right person.", 14),
         msg("5", false, "Start with anything from the seventies. Put it on while you cook.", 13),
         msg("6", true, "Doing that tonight. Thank you!", 2, DeliveryStatus.Delivered),
+    )
+
+    val draftAttachments = listOf(
+        DraftAttachment.Ready("d1", Attachment("d1", AttachmentKind.Image, "/missing/1.webp", "image/webp", 800, 600)),
+        DraftAttachment.Ready("d2", Attachment("d2", AttachmentKind.Gif, "/missing/2.gif", "image/gif", 400, 400)),
+        DraftAttachment.Ready("d3", Attachment("d3", AttachmentKind.Video, "/missing/3.mp4", "video/mp4", 1080, 1920, durationMillis = 14_000)),
     )
 
     val conversations = listOf(

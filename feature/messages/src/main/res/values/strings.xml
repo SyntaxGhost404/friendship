@@ -17,7 +17,6 @@
     <string name="msg_archived_empty">Nothing archived. Chats with people you block end up here.</string>
 
     <string name="chat_hint">Message</string>
-    <string name="chat_send">Send</string>
     <string name="chat_view_profile">View profile</string>
     <string name="chat_mute">Mute notifications</string>
     <string name="chat_unmute">Unmute notifications</string>

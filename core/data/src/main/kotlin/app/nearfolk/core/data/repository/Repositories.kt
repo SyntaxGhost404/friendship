@@ -3,6 +3,7 @@ package app.nearfolk.core.data.repository
 import androidx.paging.PagingData
 import app.nearfolk.core.model.AccountState
 import app.nearfolk.core.model.ActivityItem
+import app.nearfolk.core.model.Attachment
 import app.nearfolk.core.model.Comment
 import app.nearfolk.core.model.Conversation
 import app.nearfolk.core.model.ConversationState
@@ -94,7 +95,7 @@ interface PostRepository {
     fun comments(postId: String): Flow<List<Comment>>
     fun stats(authorId: String): Flow<PostStats>
     suspend fun toggleLike(postId: String)
-    suspend fun addComment(postId: String, text: String)
+    suspend fun addComment(postId: String, text: String, attachments: List<Attachment> = emptyList())
     suspend fun createPost(caption: String, mediaPath: String?)
     suspend fun deletePost(id: String)
     fun activity(): Flow<List<ActivityItem>>
@@ -111,7 +112,8 @@ interface ChatRepository {
 
     /** Returns the id of the thread with [memberId], creating an empty one when needed. */
     suspend fun conversationWith(memberId: String): String
-    suspend fun send(conversationId: String, text: String): SendResult
+    /** Sends text, media or both. Attachments must already be copied into app storage. */
+    suspend fun send(conversationId: String, text: String, attachments: List<Attachment> = emptyList()): SendResult
     suspend fun markRead(conversationId: String)
     suspend fun acceptRequest(conversationId: String)
     suspend fun setMuted(conversationId: String, muted: Boolean)

@@ -8,15 +8,17 @@ A native Android app for meeting strangers and talking at your own pace. It grew
 | --- | --- | --- | --- |
 | ![](docs/screenshots/welcome_dark.png) | ![](docs/screenshots/discover_light.png) | ![](docs/screenshots/flow_2_profile.png) | ![](docs/screenshots/chat_dark.png) |
 
-| Messages | Chat request | You | Journal lock |
+| Messages | Chat request | Composer | Journal lock |
 | --- | --- | --- | --- |
-| ![](docs/screenshots/inbox_dark.png) | ![](docs/screenshots/chat_request_dark.png) | ![](docs/screenshots/you_dark.png) | ![](docs/screenshots/passcode_dark.png) |
+| ![](docs/screenshots/inbox_dark.png) | ![](docs/screenshots/chat_request_dark.png) | ![](docs/screenshots/composer_long_dark.png) | ![](docs/screenshots/passcode_dark.png) |
 
 ## What works today
 
 - **Onboarding**: name, gender, date of birth (18+ only), country, community guidelines, notification permission.
 - **Discover**: dense member list with avatar, presence, age, gender, sign, city and a bio snippet. Gender chips, a filter sheet (online only, countries, age range for Plus), pull to refresh, and typo tolerant name search ("amra" finds "Amara").
 - **Profiles**: cover image, avatar, exact last seen time, status, day counter, details, voice intro, highlights grid with a full screen viewer, and an endless post stream with likes and comments. Report and block from the overflow menu.
+- **Composer**: one container for chat messages and comments, with attachments waiting to send, the text, and a fixed action row (attach on the left, send on the right). The text grows up to a quarter of the space visible above the keyboard (3 to 12 lines), then scrolls inside the box. Send stays on screen, dimmed until there is something to send.
+- **Attachments**: up to 10 photos, videos or GIFs per message or comment, from the system photo picker or straight from the keyboard's GIF and sticker panels. Photos are re-encoded without location data; GIFs and stickers keep their animation; videos play in a full screen viewer.
 - **Messages**: chats and requests (first messages from people you have not accepted yet; the message bar stays hidden until you accept, block or delete), archived threads, unread counts, typing state, delivery and read marks, day separators, grouped bubbles, long press to copy.
 - **Safety**: dismissible safety notice per chat, a cap of three messages until the other person replies, report with reasons, block with confirmation (archives the thread), delete chat with confirmation, blocked members list.
 - **You**: profile preview as others see it, edit identity, avatar and cover crop (pan and pinch in a squircle frame), voice intro recording, posts, highlights, and an activity feed for likes and comments.
@@ -56,7 +58,7 @@ core/model              Plain Kotlin domain types
 core/common             Fuzzy search, passcode hashing, clock
 core/designsystem       Theme, squircle shape, components, icons
 core/ui                 Shared composables that know the domain (avatars, rows, posts, sheets)
-core/database           Room entities and DAOs (schema exported to core/database/schemas)
+core/database           Room entities and DAOs (schemas exported to core/database/schemas, auto migrations)
 core/datastore          Typed preferences
 core/data               Repositories, media storage, voice recording, local community
 feature/onboarding      Welcome and profile creation

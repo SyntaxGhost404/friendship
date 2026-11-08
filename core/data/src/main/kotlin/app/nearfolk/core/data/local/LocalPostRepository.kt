@@ -6,6 +6,7 @@ import androidx.paging.PagingData
 import androidx.paging.map
 import app.nearfolk.core.common.TimeSource
 import app.nearfolk.core.data.community.CommunitySimulator
+import app.nearfolk.core.data.media.AttachmentCodec
 import app.nearfolk.core.data.media.MediaFiles
 import app.nearfolk.core.data.repository.PostRepository
 import app.nearfolk.core.data.repository.PostStats
@@ -13,6 +14,8 @@ import app.nearfolk.core.database.NearfolkDatabase
 import app.nearfolk.core.database.entity.CommentEntity
 import app.nearfolk.core.database.entity.PostEntity
 import app.nearfolk.core.model.ActivityItem
+import app.nearfolk.core.model.Attachment
+import app.nearfolk.core.model.AttachmentLimits
 import app.nearfolk.core.model.Comment
 import app.nearfolk.core.model.MediaRef
 import app.nearfolk.core.model.Post
@@ -56,11 +59,16 @@ internal class LocalPostRepository @Inject constructor(
 
     override suspend fun toggleLike(postId: String) = posts.toggleLike(postId)
 
-    override suspend fun addComment(postId: String, text: String) {
+    override suspend fun addComment(postId: String, text: String, attachments: List<Attachment>) {
         val clean = text.trim().take(ProfileRules.COMMENT_MAX)
-        if (clean.isEmpty()) return
+        val files = attachments.take(AttachmentLimits.PER_MESSAGE)
+        if (clean.isEmpty() && files.isEmpty()) return
         db.withTransaction {
-            comments.insertAll(listOf(CommentEntity(UUID.randomUUID().toString(), postId, SELF_ID, clean, time.now().toEpochMilli())))
+            comments.insertAll(
+                listOf(
+                    CommentEntity(UUID.randomUUID().toString(), postId, SELF_ID, clean, time.now().toEpochMilli(), AttachmentCodec.encode(files)),
+                ),
+            )
             posts.incrementComments(postId)
         }
     }
@@ -87,12 +95,14 @@ internal class LocalPostRepository @Inject constructor(
     override suspend fun deletePost(id: String) {
         val row = posts.get(id) ?: return
         if (row.authorId != SELF_ID) return
+        val commentFiles = comments.forPost(id).flatMap { AttachmentCodec.decode(it.attachments) }
         db.withTransaction {
             comments.deleteForPost(id)
             activity.deleteForPost(id)
             posts.delete(id)
         }
         (MediaRef.decode(row.media) as? MediaRef.Local)?.let { media.delete(it.path) }
+        media.deleteAttachments(commentFiles)
     }
 
     override fun activity(): Flow<List<ActivityItem>> = activity.observe().map { rows -> rows.map { it.toModel() } }

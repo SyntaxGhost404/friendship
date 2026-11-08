@@ -1,6 +1,7 @@
 package app.nearfolk
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -105,8 +106,9 @@ class ScreenshotTest {
     private fun chat(dark: Boolean) = shot("chat", dark) {
         ChatScreen(
             state = ChatUiState(false, Fixtures.conversations.first().copy(peerIsTyping = false), Fixtures.thread, showSafetyBanner = true, allowance = null, blocked = false),
-            draft = "",
-            onDraft = {}, onSend = {}, onBack = {}, onOpenProfile = {}, onDismissSafety = {}, onAccept = {}, onToggleMute = {},
+            text = TextFieldState(),
+            attachments = emptyList(),
+            onAddMedia = {}, onRemoveAttachment = {}, onSend = {}, onBack = {}, onOpenProfile = {}, onDismissSafety = {}, onAccept = {}, onToggleMute = {},
             onReport = { _, _ -> }, onBlock = {}, onUnblock = {}, onDelete = {},
             now = Fixtures.now,
         )
@@ -116,8 +118,9 @@ class ScreenshotTest {
         val convo = Fixtures.conversations[1].copy(state = app.nearfolk.core.model.ConversationState.Request)
         ChatScreen(
             state = ChatUiState(false, convo, listOf(convo.lastMessage!!), showSafetyBanner = false, allowance = null, blocked = false),
-            draft = "",
-            onDraft = {}, onSend = {}, onBack = {}, onOpenProfile = {}, onDismissSafety = {}, onAccept = {}, onToggleMute = {},
+            text = TextFieldState(),
+            attachments = emptyList(),
+            onAddMedia = {}, onRemoveAttachment = {}, onSend = {}, onBack = {}, onOpenProfile = {}, onDismissSafety = {}, onAccept = {}, onToggleMute = {},
             onReport = { _, _ -> }, onBlock = {}, onUnblock = {}, onDelete = {},
             now = Fixtures.now,
         )
@@ -126,8 +129,35 @@ class ScreenshotTest {
     @Test fun chatTypingLight() = shot("chat_typing", false) {
         ChatScreen(
             state = ChatUiState(false, Fixtures.conversations.first().copy(peerIsTyping = false), Fixtures.thread, showSafetyBanner = false, allowance = null, blocked = false),
-            draft = "Sounds good",
-            onDraft = {}, onSend = {}, onBack = {}, onOpenProfile = {}, onDismissSafety = {}, onAccept = {}, onToggleMute = {},
+            text = TextFieldState("That bench by the river, the one under the big tree.\nI walk past it most mornings.\nIf you ever visit, I will show you."),
+            attachments = Fixtures.draftAttachments,
+            onAddMedia = {}, onRemoveAttachment = {}, onSend = {}, onBack = {}, onOpenProfile = {}, onDismissSafety = {}, onAccept = {}, onToggleMute = {},
+            onReport = { _, _ -> }, onBlock = {}, onUnblock = {}, onDelete = {},
+            now = Fixtures.now,
+        )
+    }
+
+    @Test fun chatLongDraftDark() = shot("chat_long_draft", true) {
+        ChatScreen(
+            state = ChatUiState(false, Fixtures.conversations.first().copy(peerIsTyping = false), Fixtures.thread, showSafetyBanner = false, allowance = null, blocked = false),
+            text = TextFieldState((1..30).joinToString("\n") { "Line $it, still writing" }),
+            attachments = emptyList(),
+            onAddMedia = {}, onRemoveAttachment = {}, onSend = {}, onBack = {}, onOpenProfile = {}, onDismissSafety = {}, onAccept = {}, onToggleMute = {},
+            onReport = { _, _ -> }, onBlock = {}, onUnblock = {}, onDelete = {},
+            now = Fixtures.now,
+        )
+    }
+
+    @Test fun chatMediaLight() = shot("chat_media", false) {
+        val withMedia = Fixtures.thread.take(4) + listOf(
+            Fixtures.thread[5].copy(id = "m1", text = "", attachments = Fixtures.draftAttachments.map { (it as app.nearfolk.core.model.DraftAttachment.Ready).attachment }),
+            Fixtures.thread[4].copy(id = "m2", text = "Where was this?", attachments = listOf(Fixtures.draftAttachments[0].let { (it as app.nearfolk.core.model.DraftAttachment.Ready).attachment })),
+        )
+        ChatScreen(
+            state = ChatUiState(false, Fixtures.conversations.first().copy(peerIsTyping = false), withMedia, showSafetyBanner = false, allowance = null, blocked = false),
+            text = TextFieldState(),
+            attachments = emptyList(),
+            onAddMedia = {}, onRemoveAttachment = {}, onSend = {}, onBack = {}, onOpenProfile = {}, onDismissSafety = {}, onAccept = {}, onToggleMute = {},
             onReport = { _, _ -> }, onBlock = {}, onUnblock = {}, onDelete = {},
             now = Fixtures.now,
         )

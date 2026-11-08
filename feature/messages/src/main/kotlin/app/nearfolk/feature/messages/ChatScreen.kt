@@ -31,14 +31,14 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.rounded.Block
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Done
@@ -70,7 +70,6 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
@@ -86,19 +85,25 @@ import app.nearfolk.core.designsystem.component.NfIconButton
 import app.nearfolk.core.designsystem.component.NfNotice
 import app.nearfolk.core.designsystem.component.NfNoticeTone
 import app.nearfolk.core.designsystem.component.NfSpinner
-import app.nearfolk.core.designsystem.component.NfTextField
 import app.nearfolk.core.designsystem.component.NfTopBar
 import app.nearfolk.core.designsystem.shape.SquircleShape
 import app.nearfolk.core.designsystem.theme.HapticKind
 import app.nearfolk.core.designsystem.theme.LocalAppHaptics
 import app.nearfolk.core.designsystem.theme.Nf
 import app.nearfolk.core.designsystem.theme.NfShapes
+import app.nearfolk.core.model.Attachment
 import app.nearfolk.core.model.ConversationState
+import app.nearfolk.core.model.DraftAttachment
+import app.nearfolk.core.model.MediaSource
 import app.nearfolk.core.model.DeliveryStatus
 import app.nearfolk.core.model.Message
 import app.nearfolk.core.model.Presence
 import app.nearfolk.core.model.ProfileRules
+import app.nearfolk.core.ui.AttachmentGrid
+import app.nearfolk.core.ui.AttachmentProblemMessages
+import app.nearfolk.core.ui.AttachmentViewer
 import app.nearfolk.core.ui.BlockDialog
+import app.nearfolk.core.ui.MessageComposer
 import app.nearfolk.core.ui.LocalSnackbarHost
 import app.nearfolk.core.ui.MemberAvatar
 import app.nearfolk.core.ui.MenuAction
@@ -148,7 +153,8 @@ fun ChatRouteScreen(
     viewModel: ChatViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val draft by viewModel.draft.collectAsStateWithLifecycle()
+    val attachments by viewModel.attachments.collectAsStateWithLifecycle()
+    AttachmentProblemMessages(viewModel.attachmentProblems)
     val snackbar = LocalSnackbarHost.current
     val context = LocalContext.current
     val resources = LocalResources.current
@@ -174,8 +180,10 @@ fun ChatRouteScreen(
     }
     ChatScreen(
         state = state,
-        draft = draft,
-        onDraft = viewModel::setDraft,
+        text = viewModel.text,
+        attachments = attachments,
+        onAddMedia = viewModel::addMedia,
+        onRemoveAttachment = viewModel::removeAttachment,
         onSend = viewModel::send,
         onBack = onBack,
         onOpenProfile = { state.conversation?.peer?.id?.let(onOpenProfile) },
@@ -192,8 +200,10 @@ fun ChatRouteScreen(
 @Composable
 fun ChatScreen(
     state: ChatUiState,
-    draft: String,
-    onDraft: (String) -> Unit,
+    text: TextFieldState,
+    attachments: List<DraftAttachment>,
+    onAddMedia: (List<MediaSource>) -> Unit,
+    onRemoveAttachment: (String) -> Unit,
     onSend: () -> Unit,
     onBack: () -> Unit,
     onOpenProfile: () -> Unit,
@@ -213,6 +223,7 @@ fun ChatScreen(
     var reporting by rememberSaveable { mutableStateOf(false) }
     var blocking by rememberSaveable { mutableStateOf(false) }
     var deleting by rememberSaveable { mutableStateOf(false) }
+    var viewing by remember { mutableStateOf<Pair<List<Attachment>, Int>?>(null) }
     val haptics = LocalAppHaptics.current
 
     Column(Modifier.fillMaxSize().background(Nf.colors.canvas).imePadding()) {
@@ -321,7 +332,7 @@ fun ChatScreen(
                 items(rows, key = { it.key }) { row ->
                     when (row) {
                         is ChatRow.Day -> DayHeader(time.dayHeader(row.date), Modifier.animateItem())
-                        is ChatRow.Bubble -> MessageBubble(row, time, Modifier.animateItem())
+                        is ChatRow.Bubble -> MessageBubble(row, time, onOpenMedia = { list, i -> viewing = list to i }, modifier = Modifier.animateItem())
                     }
                 }
             }
@@ -354,39 +365,25 @@ fun ChatScreen(
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
                     )
                 }
-                Row(
-                    Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 10.dp),
-                    verticalAlignment = Alignment.Bottom,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    val canSend = allowance != 0
-                    NfTextField(
-                        value = draft,
-                        onValueChange = onDraft,
-                        placeholder = stringResource(R.string.chat_hint),
-                        singleLine = false,
-                        maxLength = ProfileRules.MESSAGE_MAX,
-                        enabled = canSend,
-                        minHeight = 48.dp,
-                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                        modifier = Modifier.weight(1f),
-                    )
-                    NfIconButton(
-                        Icons.AutoMirrored.Rounded.Send,
-                        stringResource(R.string.chat_send),
-                        onClick = {
-                            haptics.perform(HapticKind.Confirm)
-                            onSend()
-                        },
-                        style = NfButtonStyle.Primary,
-                        size = 48.dp,
-                        enabled = canSend && draft.isNotBlank(),
-                    )
-                }
+                MessageComposer(
+                    text = text,
+                    attachments = attachments,
+                    onAddMedia = onAddMedia,
+                    onRemoveAttachment = onRemoveAttachment,
+                    onSend = {
+                        haptics.perform(HapticKind.Confirm)
+                        onSend()
+                    },
+                    placeholder = stringResource(R.string.chat_hint),
+                    enabled = allowance != 0,
+                    maxLength = ProfileRules.MESSAGE_MAX,
+                    modifier = Modifier.padding(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 10.dp),
+                )
             }
         }
     }
 
+    viewing?.let { (list, index) -> AttachmentViewer(list, index, onDismiss = { viewing = null }) }
     if (peer != null && reporting) {
         ReportSheet(peer.displayName, onDismiss = { reporting = false }, onSubmit = { r, d ->
             reporting = false
@@ -458,7 +455,12 @@ private fun DayHeader(label: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun MessageBubble(row: ChatRow.Bubble, time: TimeFormat, modifier: Modifier = Modifier) {
+private fun MessageBubble(
+    row: ChatRow.Bubble,
+    time: TimeFormat,
+    onOpenMedia: (List<Attachment>, Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val m = row.message
     val mine = m.isMine
     val colors = Nf.colors
@@ -482,21 +484,42 @@ private fun MessageBubble(row: ChatRow.Bubble, time: TimeFormat, modifier: Modif
         modifier.fillMaxWidth().padding(top = if (row.joinsAbove) 2.dp else 8.dp),
         horizontalArrangement = if (mine) Arrangement.End else Arrangement.Start,
     ) {
+        val hasMedia = m.attachments.isNotEmpty()
         Column(
             Modifier
-                .widthIn(max = 300.dp)
+                .then(if (hasMedia) Modifier.width(264.dp) else Modifier.widthIn(max = 300.dp))
                 .clip(shape)
                 .background(container)
                 .combinedClickable(onClick = {}, onLongClick = {
-                    haptics.perform(HapticKind.LongPress)
-                    copyToClipboard(context, m.text)
-                    copyRequest++
-                })
-                .padding(start = 14.dp, end = 12.dp, top = 9.dp, bottom = 7.dp),
+                    if (m.text.isNotBlank()) {
+                        haptics.perform(HapticKind.LongPress)
+                        copyToClipboard(context, m.text)
+                        copyRequest++
+                    }
+                }),
             horizontalAlignment = Alignment.End,
         ) {
-            Text(m.text, style = Nf.type.body, color = content, modifier = Modifier.align(Alignment.Start))
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            if (hasMedia) {
+                AttachmentGrid(
+                    m.attachments,
+                    onOpen = { onOpenMedia(m.attachments, it) },
+                    corner = 16.dp,
+                    modifier = Modifier.padding(4.dp),
+                )
+            }
+            if (m.text.isNotEmpty()) {
+                Text(
+                    m.text,
+                    style = Nf.type.body,
+                    color = content,
+                    modifier = Modifier.align(Alignment.Start).padding(start = 14.dp, end = 12.dp, top = if (hasMedia) 4.dp else 9.dp),
+                )
+            }
+            Row(
+                Modifier.padding(start = 14.dp, end = 12.dp, top = 2.dp, bottom = 7.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
                 Text(time.clock(m.sentAt), style = Nf.type.caption, color = content.copy(alpha = 0.6f))
                 if (mine) StatusMark(m.status, content)
             }

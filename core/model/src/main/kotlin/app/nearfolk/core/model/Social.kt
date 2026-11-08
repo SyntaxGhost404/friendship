@@ -23,6 +23,7 @@ data class Comment(
     val authorAvatar: MediaRef?,
     val text: String,
     val createdAt: Instant,
+    val attachments: List<Attachment> = emptyList(),
 )
 
 data class Highlight(

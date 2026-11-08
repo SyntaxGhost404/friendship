@@ -4,11 +4,16 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
+import app.nearfolk.core.data.media.AttachmentDraftFactory
 import app.nearfolk.core.data.platform.AppVisibility
 import app.nearfolk.core.data.repository.ChatRepository
 import app.nearfolk.core.data.repository.MemberRepository
 import app.nearfolk.core.data.repository.PreferencesRepository
 import app.nearfolk.core.model.Conversation
+import app.nearfolk.core.model.DraftAttachment
+import app.nearfolk.core.model.MediaSource
 import app.nearfolk.core.model.Message
 import app.nearfolk.core.model.ReportReason
 import app.nearfolk.core.model.SendResult
@@ -48,6 +53,7 @@ class ChatViewModel @Inject constructor(
     members: MemberRepository,
     private val preferences: PreferencesRepository,
     private val visibility: AppVisibility,
+    drafts: AttachmentDraftFactory,
 ) : ViewModel() {
     val conversationId: String = savedStateHandle.toRoute<ChatRoute>().conversationId
 
@@ -70,8 +76,12 @@ class ChatViewModel @Inject constructor(
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ChatUiState())
 
-    private val _draft = MutableStateFlow("")
-    val draft: StateFlow<String> = _draft
+    /** What is being written. Lives here so it survives configuration changes. */
+    val text = TextFieldState()
+    private val media = drafts.create(viewModelScope)
+    val attachments: StateFlow<List<DraftAttachment>> = media.items
+    val attachmentProblems = media.problems
+    private val _sending = MutableStateFlow(false)
 
     private val _events = Channel<ChatEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
@@ -85,18 +95,22 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch { chat.markRead(conversationId) }
     }
 
-    fun setDraft(value: String) {
-        _draft.value = value
-    }
+    fun addMedia(sources: List<MediaSource>) = media.add(sources)
+
+    fun removeAttachment(id: String) = media.remove(id)
 
     fun send() {
-        val text = _draft.value
-        if (text.isBlank()) return
+        val body = text.text.toString()
+        val files = media.ready()
+        if ((body.isBlank() && files.isEmpty()) || _sending.value) return
+        if (attachments.value.any { it is DraftAttachment.Importing }) return
+        _sending.value = true
         viewModelScope.launch {
-            when (chat.send(conversationId, text)) {
-                SendResult.Sent -> _draft.value = ""
-                else -> Unit
+            if (chat.send(conversationId, body, files) == SendResult.Sent) {
+                text.clearText()
+                media.handOver()
             }
+            _sending.value = false
         }
     }
 
@@ -146,5 +160,6 @@ class ChatViewModel @Inject constructor(
 
     override fun onCleared() {
         if (visibility.openConversation.value == conversationId) visibility.setOpenConversation(null)
+        media.discard()
     }
 }

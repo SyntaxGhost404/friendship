@@ -69,6 +69,7 @@ import app.nearfolk.core.model.Highlight
 import app.nearfolk.core.model.Member
 import app.nearfolk.core.model.Post
 import app.nearfolk.core.model.Presence
+import app.nearfolk.core.ui.AttachmentProblemMessages
 import app.nearfolk.core.ui.BlockDialog
 import app.nearfolk.core.ui.LocalSnackbarHost
 import app.nearfolk.core.ui.MediaImage
@@ -103,6 +104,8 @@ fun ProfileRouteScreen(
     val playback by viewModel.playback.collectAsStateWithLifecycle()
     val commentsPostId by viewModel.commentsPostId.collectAsStateWithLifecycle()
     val comments by viewModel.comments.collectAsStateWithLifecycle()
+    val commentAttachments by viewModel.commentAttachments.collectAsStateWithLifecycle()
+    AttachmentProblemMessages(viewModel.attachmentProblems)
     val snackbar = LocalSnackbarHost.current
     val context = LocalContext.current
     val resources = LocalResources.current
@@ -130,7 +133,15 @@ fun ProfileRouteScreen(
         onUnblock = viewModel::unblock,
     )
     if (commentsPostId != null) {
-        CommentsSheet(comments = comments, onDismiss = { viewModel.openComments(null) }, onSend = viewModel::addComment)
+        CommentsSheet(
+            comments = comments,
+            text = viewModel.commentText,
+            attachments = commentAttachments,
+            onAddMedia = viewModel::addCommentMedia,
+            onRemoveAttachment = viewModel::removeCommentAttachment,
+            onDismiss = { viewModel.openComments(null) },
+            onSend = viewModel::sendComment,
+        )
     }
 }
 

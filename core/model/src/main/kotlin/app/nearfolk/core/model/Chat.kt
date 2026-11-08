@@ -33,6 +33,7 @@ data class Message(
     val text: String,
     val sentAt: Instant,
     val status: DeliveryStatus,
+    val attachments: List<Attachment> = emptyList(),
 ) {
     val isMine: Boolean get() = senderId == SELF_ID
 }

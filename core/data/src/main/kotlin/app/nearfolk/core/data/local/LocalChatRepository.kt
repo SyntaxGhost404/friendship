@@ -2,6 +2,8 @@ package app.nearfolk.core.data.local
 
 import app.nearfolk.core.common.TimeSource
 import app.nearfolk.core.data.community.CommunitySimulator
+import app.nearfolk.core.data.media.AttachmentCodec
+import app.nearfolk.core.data.media.MediaFiles
 import app.nearfolk.core.data.platform.ChatNotifier
 import app.nearfolk.core.data.repository.ChatRepository
 import app.nearfolk.core.database.NearfolkDatabase
@@ -9,6 +11,8 @@ import app.nearfolk.core.database.entity.BlockEntity
 import app.nearfolk.core.database.entity.ConversationEntity
 import app.nearfolk.core.database.entity.MessageEntity
 import app.nearfolk.core.database.entity.ReportEntity
+import app.nearfolk.core.model.Attachment
+import app.nearfolk.core.model.AttachmentLimits
 import app.nearfolk.core.model.Conversation
 import app.nearfolk.core.model.ConversationState
 import app.nearfolk.core.model.DeliveryStatus
@@ -32,6 +36,7 @@ internal class LocalChatRepository @Inject constructor(
     private val db: NearfolkDatabase,
     private val simulator: CommunitySimulator,
     private val notifier: ChatNotifier,
+    private val media: MediaFiles,
     private val time: TimeSource,
 ) : ChatRepository {
     private val conversations = db.conversationDao()
@@ -95,9 +100,10 @@ internal class LocalChatRepository @Inject constructor(
         return id
     }
 
-    override suspend fun send(conversationId: String, text: String): SendResult {
+    override suspend fun send(conversationId: String, text: String, attachments: List<Attachment>): SendResult {
         val clean = text.trim().take(ProfileRules.MESSAGE_MAX)
-        if (clean.isEmpty()) return SendResult.Empty
+        val media = attachments.take(AttachmentLimits.PER_MESSAGE)
+        if (clean.isEmpty() && media.isEmpty()) return SendResult.Empty
         val convo = conversations.get(conversationId) ?: return SendResult.Empty
         if (safety.isBlocked(convo.peerId)) return SendResult.Blocked
         if (convo.state == ConversationState.Request.name) return SendResult.RequestPending
@@ -105,7 +111,8 @@ internal class LocalChatRepository @Inject constructor(
             return SendResult.WaitForReply(ProfileRules.FIRST_CONTACT_LIMIT)
         }
         val now = time.now().toEpochMilli()
-        val message = MessageEntity(UUID.randomUUID().toString(), conversationId, SELF_ID, clean, now, DeliveryStatus.Sent.name)
+        val encoded = AttachmentCodec.encode(media)
+        val message = MessageEntity(UUID.randomUUID().toString(), conversationId, SELF_ID, clean, now, DeliveryStatus.Sent.name, encoded)
         db.withTransaction {
             messages.insert(message)
             conversations.upsert(
@@ -116,6 +123,7 @@ internal class LocalChatRepository @Inject constructor(
                     lastMessageSenderId = SELF_ID,
                     lastMessageAt = now,
                     lastMessageStatus = message.status,
+                    lastMessageAttachments = encoded,
                 ),
             )
         }
@@ -134,10 +142,12 @@ internal class LocalChatRepository @Inject constructor(
     override suspend fun setMuted(conversationId: String, muted: Boolean) = conversations.setMuted(conversationId, muted)
 
     override suspend fun delete(conversationId: String) {
+        val files = messages.allFor(conversationId).flatMap { AttachmentCodec.decode(it.attachments) }
         db.withTransaction {
             messages.deleteFor(conversationId)
             conversations.delete(conversationId)
         }
+        media.deleteAttachments(files)
         notifier.cancel(conversationId)
     }
 

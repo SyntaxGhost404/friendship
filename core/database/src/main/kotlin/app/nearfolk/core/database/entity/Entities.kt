@@ -1,5 +1,6 @@
 package app.nearfolk.core.database.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -56,6 +57,8 @@ data class CommentEntity(
     val authorId: String,
     val text: String,
     val createdAt: Long,
+    /** JSON list of attachments, see AttachmentCodec in core:data. */
+    @ColumnInfo(defaultValue = "[]") val attachments: String = "[]",
 )
 
 @Entity(tableName = "conversations", indices = [Index(value = ["peerId"], unique = true), Index("lastActivityAt")])
@@ -74,6 +77,7 @@ data class ConversationEntity(
     val lastMessageSenderId: String?,
     val lastMessageAt: Long?,
     val lastMessageStatus: String?,
+    @ColumnInfo(defaultValue = "[]") val lastMessageAttachments: String = "[]",
 )
 
 @Entity(tableName = "messages", indices = [Index(value = ["conversationId", "sentAt"])])
@@ -84,6 +88,7 @@ data class MessageEntity(
     val text: String,
     val sentAt: Long,
     val status: String,
+    @ColumnInfo(defaultValue = "[]") val attachments: String = "[]",
 )
 
 @Entity(tableName = "journal", indices = [Index("authorId")])
@@ -145,6 +150,7 @@ data class CommentRow(
     val authorId: String,
     val text: String,
     val createdAt: Long,
+    val attachments: String,
     val authorName: String,
     val authorAvatar: String?,
 )

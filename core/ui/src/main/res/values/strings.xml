@@ -77,4 +77,37 @@
     <string name="ui_block_body">They won’t be able to message you or see your profile. Your chat moves to Archived. You can unblock them later in Settings.</string>
     <string name="ui_block_confirm">Block</string>
     <string name="ui_blocked_done">%1$s is blocked</string>
+    <string name="ui_composer_attach">Add photos, videos or GIFs</string>
+    <string name="ui_composer_send">Send</string>
+    <string name="ui_composer_remove">Remove attachment</string>
+    <string name="ui_composer_adding">Adding attachment</string>
+    <string name="ui_composer_count">%1$d/%2$d</string>
+    <string name="ui_attach_too_large">That file is too large. Photos and GIFs can be up to 20 MB, videos up to 100 MB.</string>
+    <string name="ui_attach_unsupported">That file type isn’t supported. Try a photo, GIF or video.</string>
+    <string name="ui_attach_failed">That file couldn’t be added. Try again.</string>
+    <plurals name="ui_attach_limit">
+        <item quantity="one">You can add up to %1$d attachment.</item>
+        <item quantity="other">You can add up to %1$d attachments.</item>
+    </plurals>
+    <string name="ui_gif">GIF</string>
+    <string name="ui_video_play">Play video</string>
+    <string name="ui_video_pause">Pause video</string>
+    <string name="ui_viewer_counter">%1$d of %2$d</string>
+    <string name="ui_open_attachment">Open attachment %1$d of %2$d</string>
+    <plurals name="ui_summary_photos">
+        <item quantity="one">Photo</item>
+        <item quantity="other">%1$d photos</item>
+    </plurals>
+    <plurals name="ui_summary_videos">
+        <item quantity="one">Video</item>
+        <item quantity="other">%1$d videos</item>
+    </plurals>
+    <plurals name="ui_summary_gifs">
+        <item quantity="one">GIF</item>
+        <item quantity="other">%1$d GIFs</item>
+    </plurals>
+    <plurals name="ui_summary_mixed">
+        <item quantity="one">%1$d attachment</item>
+        <item quantity="other">%1$d attachments</item>
+    </plurals>
 </resources>

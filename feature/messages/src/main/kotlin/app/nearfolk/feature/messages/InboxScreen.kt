@@ -60,6 +60,7 @@ import app.nearfolk.core.designsystem.theme.NfShapes
 import app.nearfolk.core.model.Conversation
 import app.nearfolk.core.model.Presence
 import app.nearfolk.core.ui.MemberAvatar
+import app.nearfolk.core.ui.attachmentSummary
 import app.nearfolk.core.ui.rememberTimeFormat
 import kotlinx.serialization.Serializable
 import java.time.Instant
@@ -197,11 +198,17 @@ internal fun ConversationRow(convo: Conversation, now: Instant, onClick: () -> U
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
+                val last = convo.lastMessage
+                val body = when {
+                    last == null -> ""
+                    last.text.isNotBlank() -> last.text
+                    else -> attachmentSummary(last.attachments)
+                }
                 val preview = when {
                     convo.peerIsTyping -> stringResource(app.nearfolk.core.ui.R.string.ui_typing)
-                    convo.lastMessage == null -> ""
-                    convo.lastMessage!!.isMine -> stringResource(R.string.msg_you_prefix, convo.lastMessage!!.text)
-                    else -> convo.lastMessage!!.text
+                    last == null -> ""
+                    last.isMine -> stringResource(R.string.msg_you_prefix, body)
+                    else -> body
                 }
                 Text(
                     preview,

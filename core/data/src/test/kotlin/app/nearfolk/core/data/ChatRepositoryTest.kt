@@ -9,12 +9,16 @@ import app.nearfolk.core.common.TimeSource
 import app.nearfolk.core.data.community.CommunitySeeder
 import app.nearfolk.core.data.community.CommunitySimulator
 import app.nearfolk.core.data.local.LocalChatRepository
+import app.nearfolk.core.data.media.AttachmentCodec
+import app.nearfolk.core.data.media.MediaFiles
 import app.nearfolk.core.data.platform.AppVisibility
 import app.nearfolk.core.data.platform.ChatNotifier
 import app.nearfolk.core.database.NearfolkDatabase
 import app.nearfolk.core.database.entity.ConversationEntity
 import app.nearfolk.core.database.entity.MemberEntity
 import app.nearfolk.core.datastore.NearfolkPreferences
+import app.nearfolk.core.model.Attachment
+import app.nearfolk.core.model.AttachmentKind
 import app.nearfolk.core.model.ConversationState
 import app.nearfolk.core.model.ProfileRules
 import app.nearfolk.core.model.SendResult
@@ -39,6 +43,7 @@ class ChatRepositoryTest {
     private lateinit var db: NearfolkDatabase
     private lateinit var repo: LocalChatRepository
     private lateinit var scope: CoroutineScope
+    private lateinit var media: MediaFiles
     private val peer = "m-test"
 
     private val time = object : TimeSource {
@@ -67,7 +72,8 @@ class ChatRepositoryTest {
             scope, seeder, db.memberDao(), db.conversationDao(), db.messageDao(), db.postDao(), db.commentDao(),
             db.activityDao(), db.safetyDao(), prefs, AppVisibility(), notifier, time,
         )
-        repo = LocalChatRepository(db, simulator, notifier, time)
+        media = MediaFiles(context, kotlinx.coroutines.Dispatchers.IO)
+        repo = LocalChatRepository(db, simulator, notifier, media, time)
         db.memberDao().upsert(
             MemberEntity(
                 id = peer, displayName = "Test Peer", gender = "Female", birthEpochDay = 9000, countryCode = "NO",
@@ -133,6 +139,45 @@ class ChatRepositoryTest {
         repo.acceptRequest(id)
         assertEquals(ConversationState.Active, repo.conversation(id).first()?.state)
         assertEquals(SendResult.Sent, repo.send(id, "hi back"))
+    }
+
+    private fun attachmentFile(name: String): Attachment {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val dir = File(context.filesDir, "media/attachments").apply { mkdirs() }
+        val file = File(dir, name).apply { writeBytes(ByteArray(16)) }
+        return Attachment(name, AttachmentKind.Image, file.absolutePath, "image/webp", 640, 480, sizeBytes = 16)
+    }
+
+    @Test
+    fun mediaOnlyMessagesAreSentAndPreviewed() = runBlocking {
+        val id = repo.conversationWith(peer)
+        val photo = attachmentFile("a.webp")
+        assertEquals(SendResult.Sent, repo.send(id, "   ", listOf(photo)))
+        val sent = repo.messages(id).first().single()
+        assertEquals("", sent.text)
+        assertEquals(listOf(photo), sent.attachments)
+        assertEquals(listOf(photo), repo.conversation(id).first()?.lastMessage?.attachments)
+    }
+
+    @Test
+    fun deletingAThreadDeletesItsMediaFiles() = runBlocking {
+        val id = repo.conversationWith(peer)
+        val photo = attachmentFile("b.webp")
+        repo.send(id, "look", listOf(photo))
+        assertTrue(File(photo.path).exists())
+        repo.delete(id)
+        assertTrue(!File(photo.path).exists())
+    }
+
+    @Test
+    fun attachmentCodecRoundTrip() {
+        val list = listOf(
+            Attachment("1", AttachmentKind.Gif, "/data/x/1.gif", "image/gif", 300, 200),
+            Attachment("2", AttachmentKind.Video, "/data/x/2.mp4", "video/mp4", 1080, 1920, durationMillis = 12_500, sizeBytes = 4_000_000),
+        )
+        assertEquals(list, AttachmentCodec.decode(AttachmentCodec.encode(list)))
+        assertEquals("[]", AttachmentCodec.encode(emptyList()))
+        assertTrue(AttachmentCodec.decode("not json").isEmpty())
     }
 
     @Test

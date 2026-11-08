@@ -61,6 +61,8 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.coil.compose)
+    implementation(libs.coil.gif)
+    implementation(libs.coil.video)
 
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)

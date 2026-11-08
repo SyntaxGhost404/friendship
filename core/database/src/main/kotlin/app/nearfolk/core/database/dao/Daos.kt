@@ -154,6 +154,9 @@ interface CommentDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(comments: List<CommentEntity>)
 
+    @Query("SELECT * FROM comments WHERE postId = :postId")
+    suspend fun forPost(postId: String): List<CommentEntity>
+
     @Query("DELETE FROM comments WHERE postId = :postId")
     suspend fun deleteForPost(postId: String)
 
@@ -207,6 +210,9 @@ interface ConversationDao {
 interface MessageDao {
     @Query("SELECT * FROM messages WHERE conversationId = :conversationId ORDER BY sentAt ASC")
     fun observe(conversationId: String): Flow<List<MessageEntity>>
+
+    @Query("SELECT * FROM messages WHERE conversationId = :conversationId")
+    suspend fun allFor(conversationId: String): List<MessageEntity>
 
     @Query("SELECT * FROM messages WHERE conversationId = :conversationId ORDER BY sentAt DESC LIMIT :limit")
     suspend fun latest(conversationId: String, limit: Int): List<MessageEntity>

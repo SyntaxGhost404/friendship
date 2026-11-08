@@ -188,8 +188,13 @@ class CommunitySimulator @Inject internal constructor(
         if (random.nextFloat() < 0.08f) return // sometimes people just read
 
         val recent = messages.latest(conversationId, 3).filter { it.senderId == SELF_ID }
-        val lastText = recent.firstOrNull()?.text.orEmpty()
-        val reply = pickReply(lastText, isFirstExchange = !convo.peerHasReplied)
+        val last = recent.firstOrNull()
+        val lastText = last?.text.orEmpty()
+        val reply = if (last != null && lastText.isBlank() && last.attachments != "[]") {
+            SeedContent.mediaReplies[random.nextInt(SeedContent.mediaReplies.size)]
+        } else {
+            pickReply(lastText, isFirstExchange = !convo.peerHasReplied)
+        }
 
         _typing.update { it + conversationId }
         delay((1_200L + reply.length * 35L).coerceAtMost(5_000L))
@@ -211,6 +216,7 @@ class CommunitySimulator @Inject internal constructor(
                 lastMessageSenderId = peer.id,
                 lastMessageAt = now,
                 lastMessageStatus = message.status,
+                lastMessageAttachments = "[]",
             ),
         )
         if (!viewing) maybeNotify(conversationId, peer.displayName, reply, isRequest = false, muted = current.muted)

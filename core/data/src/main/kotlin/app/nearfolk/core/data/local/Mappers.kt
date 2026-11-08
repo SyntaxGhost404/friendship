@@ -1,5 +1,6 @@
 package app.nearfolk.core.data.local
 
+import app.nearfolk.core.data.media.AttachmentCodec
 import app.nearfolk.core.database.entity.ActivityRow
 import app.nearfolk.core.database.entity.CommentRow
 import app.nearfolk.core.database.entity.ConversationEntity
@@ -79,6 +80,7 @@ internal fun CommentRow.toModel() = Comment(
     authorAvatar = MediaRef.decode(authorAvatar),
     text = text,
     createdAt = Instant.ofEpochMilli(createdAt),
+    attachments = AttachmentCodec.decode(attachments),
 )
 
 internal fun ActivityRow.toModel() = ActivityItem(
@@ -101,6 +103,7 @@ internal fun MessageEntity.toModel() = Message(
     text = text,
     sentAt = Instant.ofEpochMilli(sentAt),
     status = enumOr(status, DeliveryStatus.Sent),
+    attachments = AttachmentCodec.decode(attachments),
 )
 
 internal fun ConversationEntity.toModel(peer: Member, typing: Boolean): Conversation {
@@ -116,6 +119,7 @@ internal fun ConversationEntity.toModel(peer: Member, typing: Boolean): Conversa
             text = text,
             sentAt = Instant.ofEpochMilli(at),
             status = enumOr(lastMessageStatus, DeliveryStatus.Sent),
+            attachments = AttachmentCodec.decode(lastMessageAttachments),
         )
     } else {
         null

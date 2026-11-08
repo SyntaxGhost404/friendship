@@ -10,8 +10,11 @@ dependencies {
     api(project(":core:designsystem"))
     api(project(":core:model"))
     implementation(project(":core:common"))
-    implementation(libs.coil.compose)
+    api(libs.coil.compose)
+    implementation(libs.coil.gif)
+    implementation(libs.coil.video)
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.activity.compose)
 }
 
 dependencies {

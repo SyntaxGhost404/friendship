@@ -18,35 +18,39 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.runtime.remember
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import app.nearfolk.core.designsystem.component.NfBottomSheet
 import app.nearfolk.core.designsystem.component.NfButtonStyle
 import app.nearfolk.core.designsystem.component.NfIconButton
-import app.nearfolk.core.designsystem.component.NfTextField
 import app.nearfolk.core.designsystem.theme.Nf
 import app.nearfolk.core.designsystem.theme.NfShapes
+import app.nearfolk.core.model.Attachment
 import app.nearfolk.core.model.Comment
+import app.nearfolk.core.model.DraftAttachment
+import app.nearfolk.core.model.MediaSource
 import app.nearfolk.core.model.Highlight
 import app.nearfolk.core.model.ProfileRules
+import app.nearfolk.core.ui.AttachmentGrid
+import app.nearfolk.core.ui.AttachmentViewer
 import app.nearfolk.core.ui.MediaImage
+import app.nearfolk.core.ui.MessageComposer
 import app.nearfolk.core.ui.MemberAvatar
 import app.nearfolk.core.ui.rememberTimeFormat
 
@@ -95,11 +99,19 @@ internal fun HighlightViewer(highlights: List<Highlight>, start: Int, onDismiss:
 }
 
 @Composable
-internal fun CommentsSheet(comments: List<Comment>, onDismiss: () -> Unit, onSend: (String) -> Unit) {
-    var draft by rememberSaveable { mutableStateOf("") }
+internal fun CommentsSheet(
+    comments: List<Comment>,
+    text: TextFieldState,
+    attachments: List<DraftAttachment>,
+    onAddMedia: (List<MediaSource>) -> Unit,
+    onRemoveAttachment: (String) -> Unit,
+    onDismiss: () -> Unit,
+    onSend: () -> Unit,
+) {
     val time = rememberTimeFormat()
+    var viewing by remember { mutableStateOf<Pair<List<Attachment>, Int>?>(null) }
     NfBottomSheet(onDismiss = onDismiss, title = stringResource(R.string.profile_comments_title)) {
-        Column(Modifier.fillMaxHeight(0.8f).imePadding()) {
+        Column(Modifier.fillMaxHeight(0.85f).imePadding()) {
             if (comments.isEmpty()) {
                 Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                     Text(stringResource(R.string.profile_comments_empty), style = Nf.type.body, color = Nf.colors.textTertiary)
@@ -109,43 +121,36 @@ internal fun CommentsSheet(comments: List<Comment>, onDismiss: () -> Unit, onSen
                     items(comments, key = { it.id }) { c ->
                         Row(Modifier.padding(vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             MemberAvatar(c.authorName, c.authorAvatar, 32.dp)
-                            Column(Modifier.weight(1f)) {
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     Text(c.authorName, style = Nf.type.label, color = Nf.colors.textPrimary)
                                     Text(time.relative(c.createdAt), style = Nf.type.labelSmall, color = Nf.colors.textTertiary)
                                 }
-                                Text(c.text, style = Nf.type.body, color = Nf.colors.textPrimary)
+                                if (c.text.isNotEmpty()) Text(c.text, style = Nf.type.body, color = Nf.colors.textPrimary)
+                                if (c.attachments.isNotEmpty()) {
+                                    AttachmentGrid(
+                                        c.attachments,
+                                        onOpen = { viewing = c.attachments to it },
+                                        corner = 12.dp,
+                                        modifier = Modifier.widthIn(max = 240.dp),
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                NfTextField(
-                    value = draft,
-                    onValueChange = { draft = it },
-                    placeholder = stringResource(R.string.profile_comment_hint),
-                    singleLine = false,
-                    maxLength = ProfileRules.COMMENT_MAX,
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                    modifier = Modifier.weight(1f),
-                )
-                NfIconButton(
-                    Icons.AutoMirrored.Rounded.Send,
-                    stringResource(R.string.profile_comment_send),
-                    onClick = {
-                        onSend(draft)
-                        draft = ""
-                    },
-                    style = NfButtonStyle.Primary,
-                    size = 52.dp,
-                    enabled = draft.isNotBlank(),
-                )
-            }
+            MessageComposer(
+                text = text,
+                attachments = attachments,
+                onAddMedia = onAddMedia,
+                onRemoveAttachment = onRemoveAttachment,
+                onSend = onSend,
+                placeholder = stringResource(R.string.profile_comment_hint),
+                maxLength = ProfileRules.COMMENT_MAX,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            )
         }
     }
+    viewing?.let { (list, index) -> AttachmentViewer(list, index, onDismiss = { viewing = null }) }
 }

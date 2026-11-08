@@ -6,6 +6,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
+import app.nearfolk.core.data.media.AttachmentDraftFactory
 import app.nearfolk.core.data.media.PlaybackState
 import app.nearfolk.core.data.media.VoicePlayer
 import app.nearfolk.core.data.repository.ChatRepository
@@ -13,6 +16,8 @@ import app.nearfolk.core.data.repository.MemberRepository
 import app.nearfolk.core.data.repository.PostRepository
 import app.nearfolk.core.data.repository.ProfileRepository
 import app.nearfolk.core.model.Comment
+import app.nearfolk.core.model.DraftAttachment
+import app.nearfolk.core.model.MediaSource
 import app.nearfolk.core.model.Highlight
 import app.nearfolk.core.model.Member
 import app.nearfolk.core.model.Post
@@ -55,6 +60,7 @@ class ProfileViewModel @Inject constructor(
     private val postRepository: PostRepository,
     private val chat: ChatRepository,
     private val player: VoicePlayer,
+    drafts: AttachmentDraftFactory,
 ) : ViewModel() {
     private val route = savedStateHandle.toRoute<MemberProfileRoute>()
     val memberId: String = route.memberId
@@ -93,13 +99,37 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch { postRepository.toggleLike(postId) }
     }
 
+    /** Comment being written for the open post. */
+    val commentText = TextFieldState()
+    private val commentMedia = drafts.create(viewModelScope)
+    val commentAttachments: StateFlow<List<DraftAttachment>> = commentMedia.items
+    val attachmentProblems = commentMedia.problems
+
     fun openComments(postId: String?) {
+        // A draft belongs to one post; switching posts starts fresh.
+        if (postId != null && postId != lastCommentPost) {
+            commentText.clearText()
+            commentMedia.discard()
+            lastCommentPost = postId
+        }
         openCommentsFor.value = postId
     }
 
-    fun addComment(text: String) {
+    private var lastCommentPost: String? = null
+
+    fun addCommentMedia(sources: List<MediaSource>) = commentMedia.add(sources)
+
+    fun removeCommentAttachment(id: String) = commentMedia.remove(id)
+
+    fun sendComment() {
         val id = openCommentsFor.value ?: return
-        viewModelScope.launch { postRepository.addComment(id, text) }
+        val body = commentText.text.toString()
+        val files = commentMedia.ready()
+        if (body.isBlank() && files.isEmpty()) return
+        if (commentAttachments.value.any { it is DraftAttachment.Importing }) return
+        commentText.clearText()
+        commentMedia.handOver()
+        viewModelScope.launch { postRepository.addComment(id, body, files) }
     }
 
     fun toggleVoice() {
@@ -125,6 +155,7 @@ class ProfileViewModel @Inject constructor(
     }
 
     override fun onCleared() {
+        commentMedia.discard()
         if (player.state.value.path == state.value.member?.voiceIntro?.path) player.stop()
     }
 }

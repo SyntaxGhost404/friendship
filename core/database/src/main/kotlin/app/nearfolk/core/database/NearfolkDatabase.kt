@@ -1,5 +1,6 @@
 package app.nearfolk.core.database
 
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import app.nearfolk.core.database.dao.ActivityDao
@@ -41,8 +42,12 @@ import app.nearfolk.core.database.entity.ReportEntity
         ReportEntity::class,
         ActivityEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
+    autoMigrations = [
+        // 2: attachments on messages and comments, and on the inbox preview.
+        AutoMigration(from = 1, to = 2),
+    ],
 )
 abstract class NearfolkDatabase : RoomDatabase() {
     abstract fun memberDao(): MemberDao

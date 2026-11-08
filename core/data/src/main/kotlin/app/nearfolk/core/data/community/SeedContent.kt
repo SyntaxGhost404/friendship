@@ -158,5 +158,14 @@ internal object SeedContent {
         "I am glad you told me.",
     )
 
+    /** Answers to a message that is only a photo, video or GIF. */
+    val mediaReplies = listOf(
+        "Oh, I like that.",
+        "Ha, that made me smile.",
+        "Where was this?",
+        "That looks lovely.",
+        "Okay, now I want to see more.",
+    )
+
     val greetingWords = setOf("hi", "hey", "hello", "hola", "hallo", "ciao", "salut", "yo", "morning", "evening")
 }
