@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="you_title">You</string>
+    <string name="you_preview">See your profile as others do</string>
+    <string name="you_edit">Edit profile</string>
+    <string name="you_no_status">Add a status so people know what you’re up to</string>
+    <string name="you_stat_posts">Posts</string>
+    <string name="you_stat_likes">Likes</string>
+    <string name="you_stat_highlights">Highlights</string>
+    <string name="you_section_share">Share</string>
+    <string name="you_section_manage">Manage</string>
+    <string name="you_new_post">New post</string>
+    <string name="you_new_post_body">Share a moment with a caption</string>
+    <string name="you_posts">Your posts</string>
+    <string name="you_posts_body">Review or delete what you’ve shared</string>
+    <string name="you_highlights">Highlights</string>
+    <string name="you_highlights_body">%1$d of %2$d photos picked</string>
+    <string name="you_activity">Activity</string>
+    <string name="you_activity_body">Likes and comments on your posts</string>
+    <string name="you_voice">Voice intro</string>
+    <string name="you_voice_none">Not recorded yet</string>
+    <string name="you_voice_length">%1$s long</string>
+    <string name="you_journal">Journal</string>
+    <string name="you_journal_locked">Protected with a passcode</string>
+    <string name="you_journal_open">Private notes, public when you choose</string>
+    <string name="you_plus">Nearfolk Plus</string>
+    <string name="you_plus_body">Age filters, longer voice intros, more highlights</string>
+    <string name="you_plus_active">Plus is active</string>
+
+    <string name="edit_title">Edit profile</string>
+    <string name="edit_save">Save</string>
+    <string name="edit_photo">Profile photo</string>
+    <string name="edit_banner">Cover image</string>
+    <string name="edit_change">Change</string>
+    <string name="edit_remove">Remove</string>
+    <string name="edit_name">Display name</string>
+    <string name="edit_status">Status</string>
+    <string name="edit_status_hint">A short line about you right now</string>
+    <string name="edit_bio">About you</string>
+    <string name="edit_bio_hint">What you’re into, what you’re looking for, what makes you laugh</string>
+    <string name="edit_country">Country or region</string>
+    <string name="edit_city">City</string>
+    <string name="edit_city_hint">Optional</string>
+    <string name="edit_gender">Gender</string>
+    <string name="edit_birth">Date of birth</string>
+    <string name="edit_streak">Counting days solo since</string>
+    <string name="edit_streak_body">The counter on your profile starts from this date.</string>
+    <string name="edit_saved">Profile updated</string>
+    <string name="edit_name_invalid">Use 2 to 30 characters.</string>
+    <string name="edit_too_young">You need to be 18 or older.</string>
+    <string name="edit_discard_title">Discard changes?</string>
+    <string name="edit_discard_body">Your edits haven’t been saved.</string>
+    <string name="edit_discard">Discard</string>
+    <string name="edit_keep">Keep editing</string>
+
+    <string name="crop_avatar_title">Position your photo</string>
+    <string name="crop_banner_title">Position your cover</string>
+    <string name="crop_hint">Drag to move, pinch to zoom</string>
+    <string name="crop_use">Use photo</string>
+    <string name="crop_failed">This image couldn’t be opened. Try another one.</string>
+
+    <string name="voice_title">Voice intro</string>
+    <string name="voice_body">Record a short hello in your own voice. It plays on your profile.</string>
+    <string name="voice_record">Record</string>
+    <string name="voice_stop">Stop</string>
+    <string name="voice_recording">Recording %1$s of %2$s</string>
+    <string name="voice_save">Save intro</string>
+    <string name="voice_discard">Record again</string>
+    <string name="voice_delete">Delete intro</string>
+    <string name="voice_delete_title">Delete your voice intro?</string>
+    <string name="voice_delete_body">It will be removed from your profile.</string>
+    <string name="voice_current">Current intro</string>
+    <string name="voice_new">New recording</string>
+    <string name="voice_too_short">That was under 2 seconds. Try a longer clip.</string>
+    <string name="voice_failed">Recording didn’t start. Check that no other app is using the microphone.</string>
+    <string name="voice_permission">Microphone access is needed to record. You can allow it in system settings.</string>
+    <string name="voice_open_settings">Open settings</string>
+    <string name="voice_limit">Up to %1$d seconds. Plus allows %2$d.</string>
+    <string name="voice_limit_plus">Up to %1$d seconds.</string>
+
+    <string name="posts_title">Your posts</string>
+    <string name="posts_empty_title">Nothing posted yet</string>
+    <string name="posts_empty_body">Posts show up on your profile for everyone to see.</string>
+    <string name="posts_delete_title">Delete this post?</string>
+    <string name="posts_delete_body">The photo, likes and comments go with it.</string>
+    <string name="posts_deleted">Post deleted</string>
+    <string name="posts_delete">Delete post</string>
+
+    <string name="compose_title">New post</string>
+    <string name="compose_post">Post</string>
+    <string name="compose_hint">Say something about this moment</string>
+    <string name="compose_add_photo">Add photo</string>
+    <string name="compose_remove_photo">Remove photo</string>
+    <string name="compose_posted">Posted</string>
+
+    <string name="highlights_title">Highlights</string>
+    <string name="highlights_body">Pick the photos that show who you are. They appear as a grid on your profile.</string>
+    <string name="highlights_add">Add photo</string>
+    <string name="highlights_count">%1$d of %2$d</string>
+    <string name="highlights_remove_title">Remove this highlight?</string>
+    <string name="highlights_remove_body">The photo is deleted from your profile.</string>
+    <string name="highlights_remove">Remove</string>
+
+    <string name="activity_title">Activity</string>
+    <string name="activity_empty_title">Nothing yet</string>
+    <string name="activity_empty_body">When people like or comment on your posts, you’ll see it here.</string>
+    <string name="activity_liked">%1$s liked your post</string>
+    <string name="activity_commented">%1$s commented: %2$s</string>
+    <plurals name="highlights_limit">
+        <item quantity="one">You’ve reached %1$d highlight. Remove one or get Plus for more.</item>
+        <item quantity="other">You’ve reached %1$d highlights. Remove one or get Plus for more.</item>
+    </plurals>
+</resources>

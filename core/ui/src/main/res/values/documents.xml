@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="doc_guidelines_title">Community guidelines</string>
+    <string-array name="doc_guidelines">
+        <item>#Be kind first</item>
+        <item>Everyone here is a stranger to someone. Write the way you would want to be written to. Disagree without insults.</item>
+        <item>#Adults only</item>
+        <item>You must be 18 or older. Report anyone who seems younger.</item>
+        <item>#No harassment</item>
+        <item>No threats, bullying, hate speech or repeated messages after someone stops replying. A request without an answer is an answer.</item>
+        <item>#Consent matters</item>
+        <item>Do not send sexual content or ask for it. Do not share photos of other people without their permission.</item>
+        <item>#Keep it honest</item>
+        <item>Use your own photos and your real age. No fake profiles, no pretending to be someone else, no scams or selling.</item>
+        <item>#Protect each other</item>
+        <item>Never ask for passwords, codes, money or bank details. If someone asks you, report them.</item>
+        <item>#What happens when rules are broken</item>
+        <item>Reported content is reviewed. Depending on what happened we may remove content, limit messaging, or close the account.</item>
+    </string-array>
+
+    <string name="doc_privacy_title">Privacy</string>
+    <string-array name="doc_privacy">
+        <item>#What this version stores</item>
+        <item>Your profile, posts, highlights, journal, messages, reports and settings are stored on this device in app private storage. Photos you add are copied into that storage and re-encoded, which removes location and camera details.</item>
+        <item>#Who can see what</item>
+        <item>Your profile, posts, highlights and public journal entries are visible to other members. Private journal entries are only visible to you and can be protected with a passcode. Your passcode is stored as a salted hash, never as plain digits.</item>
+        <item>#Permissions</item>
+        <item>Microphone access is used only while you record a voice intro. Notification access is used for message and activity alerts. Photos are picked with the system photo picker, so the app never sees the rest of your library.</item>
+        <item>#Your controls</item>
+        <item>You can deactivate your profile at any time to hide it. Deleting your account removes your profile and everything you created from this device right away.</item>
+    </string-array>
+
+    <string name="doc_terms_title">Terms of use</string>
+    <string-array name="doc_terms">
+        <item>#Using the app</item>
+        <item>You must be 18 or older and follow the community guidelines. You are responsible for what you post and send.</item>
+        <item>#Your content</item>
+        <item>You keep ownership of what you create. You allow the app to store and show it to other members so the service works.</item>
+        <item>#Accounts</item>
+        <item>We may limit or close accounts that break the guidelines. You can delete your account whenever you want from Settings.</item>
+        <item>#Plus</item>
+        <item>Plus adds features to your account for as long as the plan is active. Cancelling stops renewal; features stay until the end of the paid period.</item>
+    </string-array>
+
+    <string name="doc_licenses_title">Open source licenses</string>
+    <string-array name="doc_licenses">
+        <item>#Instrument Sans</item>
+        <item>Copyright 2022 The Instrument Sans Project Authors. Licensed under the SIL Open Font License, Version 1.1. The full license is included with the app.</item>
+        <item>#Android Jetpack</item>
+        <item>Compose, Room, DataStore, Navigation, Paging, Lifecycle and Core libraries. Copyright The Android Open Source Project. Licensed under the Apache License, Version 2.0.</item>
+        <item>#Dagger and Hilt</item>
+        <item>Copyright The Dagger Authors. Licensed under the Apache License, Version 2.0.</item>
+        <item>#Kotlin and kotlinx</item>
+        <item>Copyright JetBrains s.r.o. and contributors. Licensed under the Apache License, Version 2.0.</item>
+        <item>#Coil</item>
+        <item>Copyright Coil Contributors. Licensed under the Apache License, Version 2.0.</item>
+        <item>#Material icons</item>
+        <item>Copyright Google LLC. Licensed under the Apache License, Version 2.0.</item>
+    </string-array>
+</resources>

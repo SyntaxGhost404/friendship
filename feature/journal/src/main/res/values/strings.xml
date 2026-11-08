@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="journal_title">Journal</string>
+    <string name="journal_public_title">%1$s’s journal</string>
+    <string name="journal_new">New entry</string>
+    <string name="journal_lock_now">Lock journal</string>
+    <string name="journal_empty_title">Your journal is empty</string>
+    <string name="journal_empty_body">Write about your day, how you feel, or anything you want to remember. Private entries stay with you.</string>
+    <string name="journal_public_empty">No public entries yet.</string>
+    <string name="journal_protect_title">Protect your journal</string>
+    <string name="journal_protect_body">Set a 6 digit passcode so nobody else using this phone can read it.</string>
+    <string name="journal_protect_cta">Set passcode</string>
+    <string name="journal_private">Private</string>
+    <string name="journal_public">Public</string>
+
+    <string name="journal_editor_new">New entry</string>
+    <string name="journal_editor_edit">Edit entry</string>
+    <string name="journal_title_hint">Title</string>
+    <string name="journal_body_hint">What’s on your mind?</string>
+    <string name="journal_mood">Mood</string>
+    <string name="journal_visibility">Who can read this</string>
+    <string name="journal_visibility_private_body">Only you. Protected by your passcode when one is set.</string>
+    <string name="journal_visibility_public_body">Anyone who opens your profile can read it.</string>
+    <string name="journal_save">Save</string>
+    <string name="journal_delete">Delete entry</string>
+    <string name="journal_delete_title">Delete this entry?</string>
+    <string name="journal_delete_body">It will be gone for good.</string>
+
+    <string name="passcode_enter_title">Enter your passcode</string>
+    <string name="passcode_enter_body">Your journal is locked.</string>
+    <string name="passcode_create_title">Create a passcode</string>
+    <string name="passcode_create_body">Choose 6 digits you will remember. Avoid birthdays and repeated numbers.</string>
+    <string name="passcode_confirm_title">Enter it again</string>
+    <string name="passcode_confirm_body">Just to be sure.</string>
+    <string name="passcode_current_title">Enter your current passcode</string>
+    <string name="passcode_wrong_plain">That passcode didn’t match.</string>
+    <string name="passcode_locked">Too many tries. Try again in %1$s.</string>
+    <string name="passcode_mismatch">The two passcodes were different. Start again.</string>
+    <string name="passcode_too_simple">Too easy to guess. Pick something less predictable.</string>
+    <string name="passcode_saved">Passcode set. Your journal is protected.</string>
+    <string name="passcode_removed">Passcode removed.</string>
+    <string name="passcode_delete_digit">Delete digit</string>
+    <string name="passcode_digit">%1$d</string>
+    <string name="passcode_progress">%1$d of 6 digits entered</string>
+    <plurals name="passcode_wrong">
+        <item quantity="one">That passcode didn’t match. %1$d try left before a short wait.</item>
+        <item quantity="other">That passcode didn’t match. %1$d tries left before a short wait.</item>
+    </plurals>
+</resources>

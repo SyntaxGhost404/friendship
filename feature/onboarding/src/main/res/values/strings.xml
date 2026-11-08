@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onb_app_name">Nearfolk</string>
+    <string name="onb_tagline">Meet people who get it. Talk at your own pace.</string>
+    <string name="onb_create">Create a profile</string>
+    <string name="onb_continue_as">Continue as %1$s</string>
+    <string name="onb_next">Continue</string>
+    <string name="onb_back">Back</string>
+    <string name="onb_step">Step %1$d of %2$d</string>
+
+    <string name="onb_about_title">What should people call you?</string>
+    <string name="onb_about_body">This is how your name appears on Discover and in chats. You can change it later.</string>
+    <string name="onb_name_label">Display name</string>
+    <string name="onb_name_hint">Your first name works well</string>
+    <string name="onb_name_short">Use at least 2 characters.</string>
+    <string name="onb_gender_label">Gender</string>
+
+    <string name="onb_birth_title">When were you born?</string>
+    <string name="onb_birth_body">We show your age and sign, never your full birthday. You need to be 18 or older.</string>
+    <string name="onb_birth_label">Date of birth</string>
+    <string name="onb_birth_pick">Pick a date</string>
+    <string name="onb_too_young">You need to be 18 or older to use Nearfolk.</string>
+    <string name="onb_country_label">Country or region</string>
+    <string name="onb_country_pick">Choose</string>
+
+    <string name="onb_rules_title">A few ground rules</string>
+    <string name="onb_rules_body">Nearfolk works because people treat each other well. Read these before you start.</string>
+    <string name="onb_rule_kind_title">Be kind first</string>
+    <string name="onb_rule_kind_body">Write the way you would want to be written to.</string>
+    <string name="onb_rule_adults_title">Adults only</string>
+    <string name="onb_rule_adults_body">Everyone here is 18 or older.</string>
+    <string name="onb_rule_consent_title">Respect a no</string>
+    <string name="onb_rule_consent_body">No reply is an answer. No sexual content, no pressure.</string>
+    <string name="onb_rule_safe_title">Keep personal details private</string>
+    <string name="onb_rule_safe_body">Never share passwords, codes or bank details.</string>
+    <string name="onb_read_full">Read the full guidelines</string>
+    <string name="onb_read_privacy">How your data is handled</string>
+    <string name="onb_agree">I agree to follow the community guidelines</string>
+
+    <string name="onb_notify_title">Know when someone writes</string>
+    <string name="onb_notify_body">Get a notification for new messages and replies. You can fine tune this in Settings.</string>
+    <string name="onb_notify_allow">Allow notifications</string>
+    <string name="onb_notify_skip">Not now</string>
+    <string name="onb_finish">Start exploring</string>
+</resources>

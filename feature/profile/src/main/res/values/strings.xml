@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="profile_message">Message</string>
+    <string name="profile_journal">Journal</string>
+    <string name="profile_journal_count">Journal · %1$d</string>
+    <string name="profile_report">Report</string>
+    <string name="profile_block">Block</string>
+    <string name="profile_unblock">Unblock</string>
+    <string name="profile_about">About</string>
+    <string name="profile_details">Details</string>
+    <string name="profile_birthday">Birthday</string>
+    <string name="profile_lives_in">Lives in</string>
+    <string name="profile_joined">Joined</string>
+    <string name="profile_voice">Voice intro</string>
+    <string name="profile_highlights">Highlights</string>
+    <string name="profile_posts">Posts</string>
+    <string name="profile_no_posts">No posts yet.</string>
+    <string name="profile_preview_notice">This is how other people see your profile.</string>
+    <string name="profile_blocked_title">You blocked %1$s</string>
+    <string name="profile_blocked_body">Unblock to see their profile and message each other again.</string>
+    <string name="profile_not_found">This profile is no longer available.</string>
+    <string name="profile_highlight_counter">%1$d of %2$d</string>
+    <string name="profile_comments_title">Comments</string>
+    <string name="profile_comments_empty">No comments yet. Say something nice.</string>
+    <string name="profile_comment_hint">Add a comment</string>
+    <string name="profile_comment_send">Post comment</string>
+    <string name="profile_back">Back</string>
+    <string name="profile_more">More options</string>
+</resources>

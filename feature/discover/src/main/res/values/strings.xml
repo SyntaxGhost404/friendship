@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="discover_title">Discover</string>
+    <string name="discover_search_hint">Search by name</string>
+    <string name="discover_search_clear">Clear search</string>
+    <string name="discover_filters">Filters</string>
+    <string name="discover_gender_all">Everyone</string>
+    <string name="discover_empty_title">No one matches yet</string>
+    <string name="discover_empty_body">Try fewer filters, or check back later. New people join every day.</string>
+    <string name="discover_empty_search_title">No names like “%1$s”</string>
+    <string name="discover_empty_search_body">Check the spelling, or search with part of a name.</string>
+    <string name="discover_clear_filters">Clear filters</string>
+    <string name="discover_filter_title">Filters</string>
+    <string name="discover_filter_gender">Show me</string>
+    <string name="discover_filter_online">Online now only</string>
+    <string name="discover_filter_online_body">Hide people who are away</string>
+    <string name="discover_filter_countries">Countries and regions</string>
+    <string name="discover_filter_countries_any">Anywhere</string>
+    <string name="discover_filter_age">Age range</string>
+    <string name="discover_filter_age_value">%1$d to %2$d</string>
+    <string name="discover_filter_age_plus">Age range is part of Plus</string>
+    <string name="discover_filter_age_plus_cta">See Plus</string>
+    <string name="discover_filter_reset">Reset</string>
+    <string name="discover_filter_apply">Show results</string>
+    <plurals name="discover_online_count">
+        <item quantity="one">%1$d online now</item>
+        <item quantity="other">%1$d online now</item>
+    </plurals>
+    <plurals name="discover_results">
+        <item quantity="one">%1$d person</item>
+        <item quantity="other">%1$d people</item>
+    </plurals>
+    <plurals name="discover_filter_countries_some">
+        <item quantity="one">%1$d selected</item>
+        <item quantity="other">%1$d selected</item>
+    </plurals>
+</resources>

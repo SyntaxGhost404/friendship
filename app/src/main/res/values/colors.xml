@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="launcher_background">#111210</color>
+    <color name="canvas">#F5F4EE</color>
+    <color name="notification_accent">#7A6210</color>
+</resources>

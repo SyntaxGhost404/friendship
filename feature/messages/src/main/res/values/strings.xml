@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="msg_title">Messages</string>
+    <string name="msg_tab_chats">Chats</string>
+    <string name="msg_tab_requests">Requests</string>
+    <string name="msg_tab_requests_count">Requests · %1$d</string>
+    <string name="msg_you_prefix">You: %1$s</string>
+    <string name="msg_muted">Notifications off</string>
+    <string name="msg_empty_title">No conversations yet</string>
+    <string name="msg_empty_body">Find someone on Discover and say hello. A good first message asks a question.</string>
+    <string name="msg_empty_cta">Go to Discover</string>
+    <string name="msg_requests_empty_title">No requests</string>
+    <string name="msg_requests_empty_body">When someone new writes to you, it shows up here first. Reply to accept.</string>
+    <string name="msg_requests_hint">People you haven’t talked to yet. They can’t see if you read their message until you reply.</string>
+    <string name="msg_archived">Archived chats</string>
+    <string name="msg_archived_title">Archived</string>
+    <string name="msg_archived_empty">Nothing archived. Chats with people you block end up here.</string>
+
+    <string name="chat_hint">Message</string>
+    <string name="chat_send">Send</string>
+    <string name="chat_view_profile">View profile</string>
+    <string name="chat_mute">Mute notifications</string>
+    <string name="chat_unmute">Unmute notifications</string>
+    <string name="chat_report">Report</string>
+    <string name="chat_block">Block</string>
+    <string name="chat_unblock">Unblock</string>
+    <string name="chat_delete">Delete chat</string>
+    <string name="chat_delete_title">Delete this chat?</string>
+    <string name="chat_delete_body">All messages in this chat are removed from your device. This can’t be undone.</string>
+    <string name="chat_delete_confirm">Delete chat</string>
+    <string name="chat_safety_title">Stay safe</string>
+    <string name="chat_safety_body">Never share passwords, login codes, bank details or your home address. Nearfolk will never ask for them in a chat.</string>
+    <string name="chat_request_title">%1$s wants to chat</string>
+    <string name="chat_request_body">Reply to accept. If this feels off, you can block or delete it.</string>
+    <string name="chat_request_accept">Accept</string>
+    <string name="chat_wait">Wait for %1$s to reply before sending more.</string>
+    <string name="chat_blocked">You blocked %1$s. Unblock to message each other again.</string>
+    <string name="chat_status_sent">Sent</string>
+    <string name="chat_status_delivered">Delivered</string>
+    <string name="chat_status_read">Read</string>
+    <string name="chat_status_sending">Sending</string>
+    <string name="chat_status_failed">Not sent</string>
+    <string name="chat_copied">Message copied</string>
+    <string name="chat_first_message">Say hi to %1$s. Mention something from their profile, it makes a good start.</string>
+    <string name="chat_muted_on">Notifications off for this chat</string>
+    <string name="chat_muted_off">Notifications on for this chat</string>
+    <plurals name="msg_archived_count">
+        <item quantity="one">%1$d archived</item>
+        <item quantity="other">%1$d archived</item>
+    </plurals>
+    <plurals name="chat_allowance">
+        <item quantity="one">You can send %1$d more until %2$s replies.</item>
+        <item quantity="other">You can send %1$d more until %2$s replies.</item>
+    </plurals>
+</resources>
