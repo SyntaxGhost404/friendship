@@ -14,6 +14,7 @@ dependencies {
     api(libs.androidx.compose.ui.graphics)
     api(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.activity.compose)
 
     testImplementation(libs.robolectric)
     testImplementation(libs.roborazzi)

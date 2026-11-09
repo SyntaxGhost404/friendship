@@ -12,12 +12,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SheetState
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,8 +27,23 @@ import app.nearfolk.core.designsystem.theme.Nf
 import app.nearfolk.core.designsystem.theme.NfShapes
 
 /**
+ * Full screen dialog for media viewers. The content draws its own background
+ * and follows the popup rules in [NfPopupContent].
+ */
+@Composable
+fun NfFullScreenDialog(onDismiss: () -> Unit, content: @Composable () -> Unit) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+    ) {
+        NfPopupContent(content)
+    }
+}
+
+/**
  * Confirmation dialog. Buttons stack full width so long labels such as
  * "Delete chat" never wrap, and the destructive action sits closest to the thumb.
+ * The text scrolls when it does not fit; the buttons always stay on screen.
  */
 @Composable
 fun NfConfirmDialog(
@@ -45,76 +58,40 @@ fun NfConfirmDialog(
     content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Column(
-            Modifier
-                .padding(horizontal = 28.dp)
-                .fillMaxWidth()
-                .clip(NfShapes.extraLarge)
-                .background(Nf.colors.surface)
-                .padding(24.dp),
-        ) {
-            Text(title, style = Nf.type.title, color = Nf.colors.textPrimary)
-            Spacer(Modifier.height(10.dp))
-            Text(message, style = Nf.type.body, color = Nf.colors.textSecondary)
-            if (content != null) {
-                Spacer(Modifier.height(16.dp))
-                content()
-            }
-            Spacer(Modifier.height(24.dp))
-            NfButton(
-                text = confirmLabel,
-                onClick = onConfirm,
-                style = if (destructive) NfButtonStyle.Danger else NfButtonStyle.Primary,
-                loading = loading,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Spacer(Modifier.height(8.dp))
-            NfButton(
-                text = dismissLabel,
-                onClick = onDismiss,
-                style = NfButtonStyle.Secondary,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun NfBottomSheet(
-    onDismiss: () -> Unit,
-    modifier: Modifier = Modifier,
-    sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-    title: String? = null,
-    content: @Composable ColumnScope.() -> Unit,
-) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        modifier = modifier,
-        sheetState = sheetState,
-        shape = NfShapes.sheet,
-        containerColor = Nf.colors.surface,
-        contentColor = Nf.colors.textPrimary,
-        scrimColor = Nf.colors.scrim,
-        dragHandle = {
-            Box(Modifier.padding(top = 10.dp, bottom = 6.dp)) {
-                Box(
-                    Modifier
-                        .width(36.dp)
-                        .height(5.dp)
-                        .clip(NfShapes.badge)
-                        .background(Nf.colors.lineStrong),
+        NfPopupContent {
+            Column(
+                Modifier
+                    .padding(horizontal = 28.dp, vertical = 24.dp)
+                    .widthIn(max = 420.dp)
+                    .fillMaxWidth()
+                    .shapeSurface(Nf.colors.surface, NfShapes.extraLarge)
+                    .padding(24.dp),
+            ) {
+                Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
+                    Text(title, style = Nf.type.title, color = Nf.colors.textPrimary)
+                    Spacer(Modifier.height(10.dp))
+                    Text(message, style = Nf.type.body, color = Nf.colors.textSecondary)
+                    if (content != null) {
+                        Spacer(Modifier.height(16.dp))
+                        content()
+                    }
+                }
+                Spacer(Modifier.height(24.dp))
+                NfButton(
+                    text = confirmLabel,
+                    onClick = onConfirm,
+                    style = if (destructive) NfButtonStyle.Danger else NfButtonStyle.Primary,
+                    loading = loading,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(8.dp))
+                NfButton(
+                    text = dismissLabel,
+                    onClick = onDismiss,
+                    style = NfButtonStyle.Secondary,
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
-        },
-    ) {
-        Column(Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
-            if (title != null) {
-                Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(title, style = Nf.type.title, color = Nf.colors.textPrimary)
-                }
-            }
-            content()
         }
     }
 }

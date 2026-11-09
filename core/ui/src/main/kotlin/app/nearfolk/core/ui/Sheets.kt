@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -61,7 +60,7 @@ fun CountryPickerSheet(
     }
     val shown = remember(query, entries) { FuzzyMatcher.rank(query, entries) { it.second } }
     NfBottomSheet(onDismiss = onDismiss, title = stringResource(R.string.ui_country_title)) {
-        Column(Modifier.fillMaxHeight(0.85f).imePadding()) {
+        Column(Modifier.fillMaxHeight(0.85f)) {
             NfSearchField(
                 query = query,
                 onQueryChange = { query = it },
@@ -137,7 +136,6 @@ fun ReportSheet(
             Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .imePadding()
                 .padding(horizontal = 8.dp),
         ) {
             Text(

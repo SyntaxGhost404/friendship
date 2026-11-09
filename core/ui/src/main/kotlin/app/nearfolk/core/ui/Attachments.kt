@@ -45,9 +45,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import app.nearfolk.core.designsystem.component.NfButtonStyle
+import app.nearfolk.core.designsystem.component.NfFullScreenDialog
 import app.nearfolk.core.designsystem.component.NfIconButton
 import app.nearfolk.core.designsystem.shape.SquircleShape
 import app.nearfolk.core.designsystem.theme.Nf
@@ -158,7 +157,7 @@ fun AttachmentGrid(
 @Composable
 fun AttachmentViewer(attachments: List<Attachment>, start: Int, onDismiss: () -> Unit) {
     if (attachments.isEmpty()) return
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+    NfFullScreenDialog(onDismiss) {
         val pager = rememberPagerState(initialPage = start.coerceIn(0, attachments.lastIndex)) { attachments.size }
         Box(Modifier.fillMaxSize().background(Color.Black)) {
             HorizontalPager(pager, Modifier.fillMaxSize()) { page ->

@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -34,10 +33,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import app.nearfolk.core.designsystem.component.NfBottomSheet
 import app.nearfolk.core.designsystem.component.NfButtonStyle
+import app.nearfolk.core.designsystem.component.NfFullScreenDialog
 import app.nearfolk.core.designsystem.component.NfIconButton
 import app.nearfolk.core.designsystem.theme.Nf
 import app.nearfolk.core.designsystem.theme.NfShapes
@@ -58,7 +56,7 @@ import app.nearfolk.core.ui.rememberTimeFormat
 @Composable
 internal fun HighlightViewer(highlights: List<Highlight>, start: Int, onDismiss: () -> Unit) {
     if (highlights.isEmpty()) return
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+    NfFullScreenDialog(onDismiss) {
         val pager = rememberPagerState(initialPage = start.coerceIn(0, highlights.lastIndex)) { highlights.size }
         Box(Modifier.fillMaxSize().background(Color.Black)) {
             HorizontalPager(pager, Modifier.fillMaxSize()) { page ->
@@ -111,7 +109,7 @@ internal fun CommentsSheet(
     val time = rememberTimeFormat()
     var viewing by remember { mutableStateOf<Pair<List<Attachment>, Int>?>(null) }
     NfBottomSheet(onDismiss = onDismiss, title = stringResource(R.string.profile_comments_title)) {
-        Column(Modifier.fillMaxHeight(0.85f).imePadding()) {
+        Column(Modifier.fillMaxHeight(0.85f)) {
             if (comments.isEmpty()) {
                 Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                     Text(stringResource(R.string.profile_comments_empty), style = Nf.type.body, color = Nf.colors.textTertiary)

@@ -1,5 +1,6 @@
 package app.nearfolk.core.ui
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
@@ -9,8 +10,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import app.nearfolk.core.designsystem.component.NfPopupContent
 import app.nearfolk.core.designsystem.theme.Nf
-import app.nearfolk.core.designsystem.theme.NfShapes
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -53,19 +55,25 @@ fun NfDatePickerDialog(
         navigationContentColor = c.textPrimary,
         dividerColor = c.line,
     )
-    DatePickerDialog(
-        onDismissRequest = onDismiss,
-        shape = NfShapes.extraLarge,
-        colors = colors,
-        confirmButton = {
-            TextButton(onClick = {
-                state.selectedDateMillis?.let { onConfirm(Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate()) }
-            }) { Text(stringResource(R.string.ui_done), color = c.textPrimary, style = Nf.type.label) }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.ui_cancel), color = c.textSecondary, style = Nf.type.label) }
-        },
-    ) {
-        DatePicker(state = state, colors = colors, showModeToggle = true)
+    // The picker scrolls months and years inside a dialog window, so it follows the
+    // popup rules. Its surface clips its content, which we cannot turn off, so the
+    // dialog uses a plain rounded rectangle here: that clip is done by the renderer
+    // without a path, unlike the squircle.
+    NfPopupContent {
+        DatePickerDialog(
+            onDismissRequest = onDismiss,
+            shape = RoundedCornerShape(28.dp),
+            colors = colors,
+            confirmButton = {
+                TextButton(onClick = {
+                    state.selectedDateMillis?.let { onConfirm(Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate()) }
+                }) { Text(stringResource(R.string.ui_done), color = c.textPrimary, style = Nf.type.label) }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.ui_cancel), color = c.textSecondary, style = Nf.type.label) }
+            },
+        ) {
+            DatePicker(state = state, colors = colors, showModeToggle = true)
+        }
     }
 }
