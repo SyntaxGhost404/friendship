@@ -90,6 +90,12 @@ data class PostStats(val posts: Int, val likes: Int, val highlights: Int)
 
 interface PostRepository {
     fun posts(authorId: String): Flow<PagingData<Post>>
+
+    /** Posts from everyone you can see, newest first. */
+    fun feed(): Flow<PagingData<Post>>
+
+    /** Asks for posts published since the last look. They arrive through [feed]. */
+    suspend fun refreshFeed()
     fun allPosts(authorId: String): Flow<List<Post>>
     fun post(id: String): Flow<Post?>
     fun comments(postId: String): Flow<List<Comment>>

@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">Nearfolk</string>
     <string name="nav_discover">Discover</string>
+    <string name="nav_feed">Feed</string>
     <string name="nav_messages">Messages</string>
     <string name="nav_you">You</string>
     <string name="nav_settings">Settings</string>

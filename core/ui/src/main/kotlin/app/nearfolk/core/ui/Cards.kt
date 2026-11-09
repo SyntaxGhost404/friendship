@@ -140,17 +140,37 @@ fun PostItem(
     onOpenComments: () -> Unit,
     modifier: Modifier = Modifier,
     onOptions: (() -> Unit)? = null,
+    onOpenAuthor: (() -> Unit)? = null,
     now: Instant = Instant.now(),
 ) {
     val time = rememberTimeFormat()
     val haptics = LocalAppHaptics.current
     Column(modifier.fillMaxWidth().padding(vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            MemberAvatar(post.authorName, post.authorAvatar, 36.dp)
-            Spacer(Modifier.width(10.dp))
-            Column(Modifier.weight(1f)) {
-                Text(post.authorName, style = Nf.type.label, color = Nf.colors.textPrimary, maxLines = 1)
-                Text(time.relative(post.createdAt, now), style = Nf.type.labelSmall, color = Nf.colors.textTertiary)
+            Row(
+                Modifier
+                    .weight(1f)
+                    .then(
+                        if (onOpenAuthor == null) {
+                            Modifier
+                        } else {
+                            Modifier
+                                .clip(NfShapes.small)
+                                .clickable(
+                                    onClickLabel = stringResource(R.string.ui_open_profile),
+                                    role = Role.Button,
+                                    onClick = onOpenAuthor,
+                                )
+                        },
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                MemberAvatar(post.authorName, post.authorAvatar, 36.dp)
+                Spacer(Modifier.width(10.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(post.authorName, style = Nf.type.label, color = Nf.colors.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(time.relative(post.createdAt, now), style = Nf.type.labelSmall, color = Nf.colors.textTertiary)
+                }
             }
             if (onOptions != null) {
                 NfIconButton(Icons.Rounded.MoreHoriz, stringResource(R.string.ui_post_options), onOptions, size = 36.dp, tint = Nf.colors.textSecondary)

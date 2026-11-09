@@ -91,6 +91,21 @@ interface PostDao {
     )
     fun pagingFor(authorId: String): PagingSource<Int, PostRow>
 
+    /**
+     * Everyone's posts, newest first: your own, plus those of members who are
+     * discoverable and not blocked. A blocked or deactivated member drops out
+     * of the feed the moment that changes.
+     */
+    @Query(
+        """
+        SELECT p.*, m.displayName AS authorName, m.avatar AS authorAvatar
+        FROM posts p JOIN members m ON m.id = p.authorId
+        WHERE m.id = :selfId OR (m.discoverable = 1 AND m.id NOT IN (SELECT memberId FROM blocks))
+        ORDER BY p.createdAt DESC, p.id DESC
+        """,
+    )
+    fun pagingFeed(selfId: String): PagingSource<Int, PostRow>
+
     @Query(
         """
         SELECT p.*, m.displayName AS authorName, m.avatar AS authorAvatar

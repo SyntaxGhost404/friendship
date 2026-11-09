@@ -45,6 +45,13 @@ internal class LocalPostRepository @Inject constructor(
             .flow
             .map { page -> page.map { it.toModel() } }
 
+    override fun feed(): Flow<PagingData<Post>> =
+        Pager(PagingConfig(pageSize = 12, prefetchDistance = 6, enablePlaceholders = false)) { posts.pagingFeed(SELF_ID) }
+            .flow
+            .map { page -> page.map { it.toModel() } }
+
+    override suspend fun refreshFeed() = simulator.refreshFeed()
+
     override fun allPosts(authorId: String): Flow<List<Post>> = posts.observeFor(authorId).map { rows -> rows.map { it.toModel() } }
 
     override fun post(id: String): Flow<Post?> = posts.observe(id).map { it?.toModel() }

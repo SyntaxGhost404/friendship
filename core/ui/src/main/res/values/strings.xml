@@ -49,6 +49,9 @@
     <string name="ui_like">Like</string>
     <string name="ui_unlike">Remove like</string>
     <string name="ui_comments">Comments</string>
+    <string name="ui_comments_empty">No comments yet. Say something nice.</string>
+    <string name="ui_comment_hint">Add a comment</string>
+    <string name="ui_open_profile">Open profile</string>
     <string name="ui_post_options">Post options</string>
     <string name="ui_streak_days">days solo</string>
     <string name="ui_streak_since">Since %1$s</string>

@@ -14,7 +14,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -73,7 +72,7 @@ class PopupTest {
 
     private fun showMenu(dark: Boolean, alignment: Alignment) = show(dark) {
         Box(Modifier.fillMaxSize().padding(8.dp)) {
-            Box(Modifier.align(alignment).testTag("anchor")) {
+            Box(Modifier.align(alignment)) {
                 NfIconButton(Icons.Rounded.MoreHoriz, "More", { menuOpen = true })
                 NfMenu(
                     expanded = menuOpen,

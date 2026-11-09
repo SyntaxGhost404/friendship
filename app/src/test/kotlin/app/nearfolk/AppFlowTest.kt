@@ -2,7 +2,10 @@ package app.nearfolk
 
 import android.graphics.Color
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -10,6 +13,7 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -19,8 +23,11 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.test.espresso.Espresso
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import app.nearfolk.feature.feed.FeedTags
 import com.github.takahirom.roborazzi.captureRoboImage
+import com.github.takahirom.roborazzi.captureScreenRoboImage
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -32,7 +39,8 @@ import kotlin.math.abs
 /**
  * Drives the real app: dependency graph, database, preferences, navigation
  * and the local community. Creates a profile, finds a member with a misspelt
- * search, opens their profile, sends a message and waits for it to be read.
+ * search, opens their profile, sends a message and waits for it to be read,
+ * then comments on a post in the feed and opens its author's profile.
  */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(AndroidJUnit4::class)
@@ -136,5 +144,33 @@ class AppFlowTest {
         // The other side reads it within a few seconds.
         rule.waitUntilAtLeastOneExists(hasContentDescription("Read"), 20_000)
         rule.onRoot().captureRoboImage("build/screenshots/flow_3_chat.png")
+
+        // Back to the tabs, then the feed: everyone's posts in one timeline.
+        Espresso.pressBack()
+        waitForText("Message")
+        Espresso.pressBack()
+        val feedTab = hasText("Feed") and hasClickAction()
+        rule.waitUntilAtLeastOneExists(feedTab, 10_000)
+        rule.onNode(feedTab).performClick()
+        rule.waitUntilAtLeastOneExists(hasTestTag(FeedTags.List), 10_000)
+        rule.onRoot().captureRoboImage("build/screenshots/flow_4_feed.png")
+
+        // Comments open in a sheet and a new comment shows up in it.
+        rule.onAllNodes(hasContentDescription("Comments") and hasClickAction()).onFirst().performClick()
+        waitForText("Add a comment")
+        rule.onNode(hasSetTextAction()).performTextInput("Lovely light in this one.")
+        rule.onNodeWithContentDescription("Send").performClick()
+        waitForText("Lovely light in this one.")
+        captureScreenRoboImage("build/screenshots/flow_5_feed_comments.png")
+        Espresso.pressBack()
+        rule.waitUntil(5_000) { rule.onAllNodesWithText("Add a comment").fetchSemanticsNodes().isEmpty() }
+
+        // The author of a post opens their profile.
+        rule.onAllNodes(opensProfile).onFirst().performClick()
+        waitForText("Message")
+    }
+
+    private val opensProfile = SemanticsMatcher("opens a profile") {
+        it.config.getOrNull(SemanticsActions.OnClick)?.label == "Open profile"
     }
 }

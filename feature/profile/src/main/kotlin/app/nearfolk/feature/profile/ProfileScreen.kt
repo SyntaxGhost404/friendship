@@ -71,6 +71,7 @@ import app.nearfolk.core.model.Post
 import app.nearfolk.core.model.Presence
 import app.nearfolk.core.ui.AttachmentProblemMessages
 import app.nearfolk.core.ui.BlockDialog
+import app.nearfolk.core.ui.CommentsSheet
 import app.nearfolk.core.ui.LocalSnackbarHost
 import app.nearfolk.core.ui.MediaImage
 import app.nearfolk.core.ui.MemberAvatar

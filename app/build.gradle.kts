@@ -44,6 +44,7 @@ dependencies {
     implementation(project(":core:data"))
     implementation(project(":feature:onboarding"))
     implementation(project(":feature:discover"))
+    implementation(project(":feature:feed"))
     implementation(project(":feature:profile"))
     implementation(project(":feature:messages"))
     implementation(project(":feature:you"))

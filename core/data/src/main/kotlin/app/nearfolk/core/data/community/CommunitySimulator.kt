@@ -15,11 +15,13 @@ import app.nearfolk.core.database.entity.ActivityEntity
 import app.nearfolk.core.database.entity.CommentEntity
 import app.nearfolk.core.database.entity.ConversationEntity
 import app.nearfolk.core.database.entity.MessageEntity
+import app.nearfolk.core.database.entity.PostEntity
 import app.nearfolk.core.datastore.NearfolkPreferences
 import app.nearfolk.core.model.AccountState
 import app.nearfolk.core.model.ActivityKind
 import app.nearfolk.core.model.ConversationState
 import app.nearfolk.core.model.DeliveryStatus
+import app.nearfolk.core.model.MediaRef
 import app.nearfolk.core.model.SELF_ID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -43,7 +45,7 @@ import kotlin.random.Random
 /**
  * Stands in for the network while the app runs without a backend. It moves
  * members online and offline, answers your messages, sends a few first
- * messages to new profiles and reacts to your posts. Everything it does goes
+ * messages to new profiles, posts now and then and reacts to your posts. Everything it does goes
  * through the same tables a real sync layer would write to.
  */
 @Singleton
@@ -78,6 +80,7 @@ class CommunitySimulator @Inject internal constructor(
             seeder.seedIfNeeded()
             launch { presenceLoop() }
             launch { introLoop() }
+            launch { postLoop() }
         }
     }
 
@@ -152,6 +155,44 @@ class CommunitySimulator @Inject internal constructor(
         messages.insert(message)
         members.setPresence(peer.id, true, now)
         maybeNotify(conversationId, peer.displayName, text, isRequest = true, muted = false)
+    }
+
+    /**
+     * While the app is open, someone posts every few minutes, so the feed
+     * moves the way it would with people on the other end.
+     */
+    private suspend fun postLoop() {
+        combine(prefs.accountState, visibility.foreground) { state, fg -> state == AccountState.Active && fg }
+            .distinctUntilChanged()
+            .collectLatest { active ->
+                while (active && scope.isActive) {
+                    delay(random.nextLong(120_000, 360_000))
+                    publishPost()
+                }
+            }
+    }
+
+    /** A pull to refresh sometimes finds a post that was just published. */
+    suspend fun refreshFeed() {
+        if (random.nextFloat() < 0.5f) publishPost()
+    }
+
+    private suspend fun publishPost() {
+        val author = members.others(SELF_ID).filter { it.discoverable && !safety.isBlocked(it.id) }.randomOrNull(random) ?: return
+        posts.insertAll(
+            listOf(
+                PostEntity(
+                    id = "${author.id}-${UUID.randomUUID()}",
+                    authorId = author.id,
+                    caption = SeedContent.captions[random.nextInt(SeedContent.captions.size)],
+                    media = if (random.nextFloat() < 0.6f) MediaRef.Generated(random.nextLong()).encode() else null,
+                    createdAt = time.now().toEpochMilli(),
+                    likeCount = 0,
+                    commentCount = 0,
+                    likedByMe = false,
+                ),
+            ),
+        )
     }
 
     /** Called after you send a message. The other person reads it and usually answers. */

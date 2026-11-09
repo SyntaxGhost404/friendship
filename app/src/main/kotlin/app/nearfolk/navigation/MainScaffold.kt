@@ -45,6 +45,8 @@ import app.nearfolk.core.ui.LocalSnackbarHost
 import app.nearfolk.core.ui.NfSnackbarHost
 import app.nearfolk.feature.discover.DiscoverRoute
 import app.nearfolk.feature.discover.DiscoverRouteScreen
+import app.nearfolk.feature.feed.FeedRoute
+import app.nearfolk.feature.feed.FeedRouteScreen
 import app.nearfolk.feature.journal.JournalEditorRoute
 import app.nearfolk.feature.journal.JournalEditorRouteScreen
 import app.nearfolk.feature.journal.JournalRoute
@@ -94,6 +96,7 @@ import app.nearfolk.feature.you.YouRouteScreen
 
 private enum class Tab(val route: Any, val label: Int) {
     Discover(DiscoverRoute, R.string.nav_discover),
+    Feed(FeedRoute, R.string.nav_feed),
     Messages(MessagesRoute, R.string.nav_messages),
     You(YouRoute, R.string.nav_you),
     Settings(SettingsRoute, R.string.nav_settings),
@@ -102,6 +105,7 @@ private enum class Tab(val route: Any, val label: Int) {
 private fun NavDestination?.tab(): Tab? = when {
     this == null -> null
     hasRoute(DiscoverRoute::class) -> Tab.Discover
+    hasRoute(FeedRoute::class) -> Tab.Feed
     hasRoute(MessagesRoute::class) -> Tab.Messages
     hasRoute(YouRoute::class) -> Tab.You
     hasRoute(SettingsRoute::class) -> Tab.Settings
@@ -159,6 +163,12 @@ fun MainScaffold(viewModel: MainViewModel) {
                     DiscoverRouteScreen(
                         onOpenMember = { nav.navigate(MemberProfileRoute(it)) },
                         onOpenPlus = { nav.navigate(PlusRoute) },
+                    )
+                }
+                composable<FeedRoute> {
+                    FeedRouteScreen(
+                        onOpenMember = { nav.navigate(MemberProfileRoute(it)) },
+                        onNewPost = { nav.navigate(ComposePostRoute) },
                     )
                 }
                 composable<MessagesRoute> {
@@ -262,6 +272,7 @@ fun MainScaffold(viewModel: MainViewModel) {
             NfNavigationBar(
                 items = listOf(
                     NfNavItem(stringResource(Tab.Discover.label), NfIcons.Discover, NfIcons.DiscoverSelected),
+                    NfNavItem(stringResource(Tab.Feed.label), NfIcons.Feed, NfIcons.FeedSelected),
                     NfNavItem(stringResource(Tab.Messages.label), NfIcons.Messages, NfIcons.MessagesSelected, badges.messages),
                     NfNavItem(stringResource(Tab.You.label), NfIcons.You, NfIcons.YouSelected, badges.you),
                     NfNavItem(stringResource(Tab.Settings.label), NfIcons.Settings, NfIcons.SettingsSelected),

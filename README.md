@@ -1,21 +1,26 @@
 # Nearfolk
 
-A native Android app for meeting strangers and talking at your own pace. It grew out of a solitude day counter and keeps that counter, but the product is now peer chat: discover people, read their profile, start a conversation, stay safe while doing it.
+A native Android app for meeting strangers and talking at your own pace. It grew out of a solitude day counter and keeps that counter, but the product is now peer chat: discover people, follow what they post, read their profile, start a conversation, stay safe while doing it.
 
 "Nearfolk" is a working name. It lives in `app/src/main/res/values/strings.xml` (`app_name`) and `feature/onboarding` (`onb_app_name`). The application id is `app.nearfolk`. Pick the final name and id before the first Play Store upload, because the id cannot change afterwards.
 
-| Welcome | Discover | Profile | Chat |
+| Welcome | Discover | Feed | Comments |
 | --- | --- | --- | --- |
-| ![](docs/screenshots/welcome_dark.png) | ![](docs/screenshots/discover_light.png) | ![](docs/screenshots/flow_2_profile.png) | ![](docs/screenshots/chat_dark.png) |
+| ![](docs/screenshots/welcome_dark.png) | ![](docs/screenshots/discover_light.png) | ![](docs/screenshots/feed_dark.png) | ![](docs/screenshots/feed_comments.png) |
 
-| Messages | Chat request | Composer | Journal lock |
+| Profile | Messages | Chat | Chat request |
 | --- | --- | --- | --- |
-| ![](docs/screenshots/inbox_dark.png) | ![](docs/screenshots/chat_request_dark.png) | ![](docs/screenshots/composer_long_dark.png) | ![](docs/screenshots/passcode_dark.png) |
+| ![](docs/screenshots/flow_2_profile.png) | ![](docs/screenshots/inbox_dark.png) | ![](docs/screenshots/chat_dark.png) | ![](docs/screenshots/chat_request_dark.png) |
+
+| Composer | Journal lock |
+| --- | --- |
+| ![](docs/screenshots/composer_long_dark.png) | ![](docs/screenshots/passcode_dark.png) |
 
 ## What works today
 
 - **Onboarding**: name, gender, date of birth (18+ only), country, community guidelines, notification permission.
 - **Discover**: dense member list with avatar, presence, age, gender, sign, city and a bio snippet. Gender chips, a filter sheet (online only, countries, age range for Plus), pull to refresh, and typo tolerant name search ("amra" finds "Amara").
+- **Feed**: the second tab (Discover, Feed, Messages, You, Settings). One timeline of everyone's posts, newest first, drawn exactly like the posts on a profile: your own posts and those of members you can find in Discover. Blocked and deactivated members drop out at once. Tap an author to open their profile, like in place, comment in a sheet, write a post from the header. Posts that arrive while you read further down never move the list; a "New posts" pill takes you back up. Your own new post shows right away. Pull to refresh.
 - **Profiles**: cover image, avatar, exact last seen time, status, day counter, details, voice intro, highlights grid with a full screen viewer, and an endless post stream with likes and comments. Report and block from the overflow menu.
 - **Composer**: one container for chat messages and comments, with attachments waiting to send, the text, and a fixed action row (attach on the left, send on the right). The text grows up to a quarter of the space visible above the keyboard (3 to 12 lines), then scrolls inside the box. Send stays on screen, dimmed until there is something to send.
 - **Attachments**: up to 10 photos, videos or GIFs per message or comment, from the system photo picker or straight from the keyboard's GIF and sticker panels. Photos are re-encoded without location data; GIFs and stickers keep their animation; videos play in a full screen viewer.
@@ -27,7 +32,7 @@ A native Android app for meeting strangers and talking at your own pace. It grew
 
 ## The network is simulated for now
 
-There is no backend yet. `core:data` ships a local implementation of every repository plus `CommunitySimulator`, which seeds 40 sample members with posts, highlights and journals, moves people online and offline, answers your messages, sends a few first messages to new profiles and reacts to your posts. All of it writes to the same Room tables a real sync layer would, so screens do not know the difference. Settings says plainly that community data is a local sample, and Plus says that store billing is not connected.
+There is no backend yet. `core:data` ships a local implementation of every repository plus `CommunitySimulator`, which seeds 40 sample members with posts, highlights and journals, moves people online and offline, answers your messages, sends a few first messages to new profiles, publishes a new post every few minutes while the app is open and reacts to your posts. All of it writes to the same Room tables a real sync layer would, so screens do not know the difference. Settings says plainly that community data is a local sample, and Plus says that store billing is not connected.
 
 Choosing the backend is the main decision for the next cycle. The seams are ready:
 
@@ -44,6 +49,7 @@ Everything visual lives in `core:designsystem`.
 - **Where squircles are not used**: switches keep a stadium track, presence dots and the playback waveform stay simple, because those read faster in their usual shape.
 - **Palette**: graphite and paper neutrals with one straw accent (hue about 46 degrees). Green is reserved for presence, red for destructive actions. No pink, purple, violet, blue or orange anywhere, including generated artwork. Chat bubbles are monochrome so long conversations stay calm.
 - **Type**: Instrument Sans, variable, SIL Open Font License 1.1 (bundled with its license).
+- **Popups**: menus, sheets and dialogs live in their own translucent windows, where the stretch overscroll shader and scaled or path clipped layers can sample uninitialized texture. That showed up as static when a list was flung against the edge of a popup. Every popup is wrapped in `NfPopupContent` and follows three rules: no overscroll effect, surfaces are filled with their shape (`Modifier.shapeSurface`) instead of clipping scroll content to a path, and movement is translation only. `NfBottomSheet` is our own sheet in a plain full screen window (`NfOverlayWindow`): it rests at the height of its content, can only move down, follows the finger through a list at its top, ignores leftover fling velocity and never stretches. `NfMenu` fades and slides a few pixels without scaling. The date picker keeps Material's dialog with a plain rounded rectangle, which the renderer clips without a path. `BottomSheetTest` and `PopupTest` cover flings, drags, dismissal and placement.
 - **Motion**: spring presets in `NfMotion`. Buttons and rows shrink slightly on press, the tab indicator and segmented thumbs glide, screens slide in, likes bounce.
 - **Icons**: the four navigation icons and the journal icon are drawn for this app (`NfIcons`). Other icons come from Material Symbols (Apache 2.0).
 - **Copy**: plain and functional. A Gradle task (`./gradlew verifyCopyPunctuation`) fails the build if an em dash or en dash appears in any Kotlin source or resource file.
@@ -62,7 +68,8 @@ core/database           Room entities and DAOs (schemas exported to core/databas
 core/datastore          Typed preferences
 core/data               Repositories, media storage, voice recording, local community
 feature/onboarding      Welcome and profile creation
-feature/discover        Member feed, filters, search
+feature/discover        Member list, filters, search
+feature/feed            Timeline of everyone's posts, comments
 feature/profile         Public profile, highlights, posts, comments
 feature/messages        Inbox, requests, archive, chat
 feature/you             Your hub, editing, crop, voice intro, posts, highlights, activity
@@ -83,7 +90,7 @@ Requirements: JDK 17 or newer and the Android SDK with platform 37.
 ./gradlew verifyCopyPunctuation       # copy rule check
 ```
 
-`AppFlowTest` runs the real app on Robolectric: it creates a profile, searches with a typo, opens a profile, sends a message and waits for the read mark. `ScreenshotTest` renders the main screens in both themes; pass `-Proborazzi.test.record=true` to write the images to `app/build/screenshots`.
+`AppFlowTest` runs the real app on Robolectric: it creates a profile, searches with a typo, opens a profile, sends a message and waits for the read mark, then opens the feed, comments on a post and opens its author. `ScreenshotTest` renders the main screens in both themes and `PopupTest` captures every popup; pass `-Proborazzi.test.record=true` to write the images to `app/build/screenshots`.
 
 Toolchain: AGP 9.5, Gradle 9.6, Kotlin 2.4, Compose BOM 2026.09, compile and target SDK 37, min SDK 29.
 

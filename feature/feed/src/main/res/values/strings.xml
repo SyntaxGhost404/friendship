@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feed_title">Feed</string>
+    <string name="feed_new_post">New post</string>
+    <string name="feed_new_posts">New posts</string>
+    <string name="feed_empty_title">Nothing posted yet</string>
+    <string name="feed_empty_body">Posts from you and the people you can find in Discover show up here, newest first.</string>
+    <string name="feed_empty_action">Write a post</string>
+</resources>

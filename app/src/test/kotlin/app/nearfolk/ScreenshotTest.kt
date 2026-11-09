@@ -9,6 +9,8 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.paging.LoadState
+import androidx.paging.LoadStates
 import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -19,11 +21,13 @@ import app.nearfolk.core.designsystem.component.NfNavigationBar
 import app.nearfolk.core.designsystem.icon.NfIcons
 import app.nearfolk.core.designsystem.theme.Nf
 import app.nearfolk.core.designsystem.theme.NearfolkTheme
+import app.nearfolk.core.model.Post
 import app.nearfolk.core.ui.AppInfo
 import app.nearfolk.core.ui.LocalAppInfo
 import app.nearfolk.core.ui.LocalSnackbarHost
 import app.nearfolk.feature.discover.DiscoverScreen
 import app.nearfolk.feature.discover.DiscoverUiState
+import app.nearfolk.feature.feed.FeedScreen
 import app.nearfolk.feature.journal.PasscodeMessage
 import app.nearfolk.feature.journal.PasscodePad
 import app.nearfolk.feature.messages.ChatScreen
@@ -54,6 +58,12 @@ import java.time.LocalDate
 @Config(qualifiers = "w400dp-h860dp-xhdpi")
 class ScreenshotTest {
 
+    private val sourceLoadStates = LoadStates(
+        refresh = LoadState.NotLoading(endOfPaginationReached = true),
+        prepend = LoadState.NotLoading(endOfPaginationReached = true),
+        append = LoadState.NotLoading(endOfPaginationReached = true),
+    )
+
     private fun shot(name: String, dark: Boolean, withBar: Int = -1, content: @Composable () -> Unit) =
         captureRoboImage("build/screenshots/${name}_${if (dark) "dark" else "light"}.png") {
             NearfolkTheme(darkTheme = dark) {
@@ -67,6 +77,7 @@ class ScreenshotTest {
                             NfNavigationBar(
                                 items = listOf(
                                     NfNavItem("Discover", NfIcons.Discover, NfIcons.DiscoverSelected),
+                                    NfNavItem("Feed", NfIcons.Feed, NfIcons.FeedSelected),
                                     NfNavItem("Messages", NfIcons.Messages, NfIcons.MessagesSelected, 3),
                                     NfNavItem("You", NfIcons.You, NfIcons.YouSelected),
                                     NfNavItem("Settings", NfIcons.Settings, NfIcons.SettingsSelected),
@@ -93,10 +104,33 @@ class ScreenshotTest {
         )
     }
 
+    @Test fun feedDark() = feed(true)
+    @Test fun feedLight() = feed(false)
+
+    private fun feed(dark: Boolean) = shot("feed", dark, withBar = 1) {
+        val posts = flowOf(PagingData.from(Fixtures.feed)).collectAsLazyPagingItems()
+        FeedScreen(
+            posts = posts,
+            refreshing = false,
+            onRefresh = {}, onToggleLike = {}, onOpenComments = {}, onOpenMember = {}, onNewPost = {},
+            now = Fixtures.now,
+        )
+    }
+
+    @Test fun feedEmptyLight() = shot("feed_empty", false, withBar = 1) {
+        val posts = flowOf(PagingData.empty<Post>(sourceLoadStates)).collectAsLazyPagingItems()
+        FeedScreen(
+            posts = posts,
+            refreshing = false,
+            onRefresh = {}, onToggleLike = {}, onOpenComments = {}, onOpenMember = {}, onNewPost = {},
+            now = Fixtures.now,
+        )
+    }
+
     @Test fun inboxDark() = inbox(true)
     @Test fun inboxLight() = inbox(false)
 
-    private fun inbox(dark: Boolean) = shot("inbox", dark, withBar = 1) {
+    private fun inbox(dark: Boolean) = shot("inbox", dark, withBar = 2) {
         InboxScreen(InboxUiState(false, Fixtures.conversations, emptyList(), 1), {}, {}, {}, now = Fixtures.now)
     }
 
@@ -181,7 +215,7 @@ class ScreenshotTest {
     @Test fun youDark() = you(true)
     @Test fun youLight() = you(false)
 
-    private fun you(dark: Boolean) = shot("you", dark, withBar = 2) {
+    private fun you(dark: Boolean) = shot("you", dark, withBar = 3) {
         YouScreen(
             YouUiState(Fixtures.me, PostStats(4, 37, 6), unseenActivity = 2, isPlus = false, passcodeSet = true),
             {}, {}, {}, {}, {}, {}, {}, {}, {},

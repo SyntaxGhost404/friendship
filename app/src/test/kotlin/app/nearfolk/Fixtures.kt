@@ -72,6 +72,14 @@ object Fixtures {
         Post("p2", amara.id, amara.displayName, amara.avatar, "Learning to enjoy eating alone at restaurants. It is getting easier.", null, ago(60L * 30), 18, 1, false),
     )
 
+    /** A mixed timeline, newest first, as the feed shows it. */
+    val feed = listOf(
+        Post("f1", kai.id, kai.displayName, kai.avatar, "Two rolls back from the lab today. Half of them are of the same pigeon and I regret nothing.", MediaRef.Generated(733), ago(12), 9, 2, false),
+        Post("f2", ines.id, ines.displayName, ines.avatar, "There is a Portuguese word for missing a place you have never been. I think about it every time it rains.", null, ago(48), 31, 6, true),
+        Post("f3", me.id, me.displayName, me.avatar, "First week in a new city. Found a bakery that opens at six, which is now my whole personality.", MediaRef.Generated(281), ago(60L * 3), 14, 4, false),
+        Post("f4", theo.id, theo.displayName, theo.avatar, "Laminated dough at 5am with nobody else around is the closest thing I have to meditation.", null, ago(60L * 9), 57, 8, false),
+    ) + posts
+
     private fun msg(id: String, mine: Boolean, text: String, minutesAgo: Long, status: DeliveryStatus = DeliveryStatus.Read) =
         Message(id, "c1", if (mine) SELF_ID else amara.id, text, ago(minutesAgo), status)
 

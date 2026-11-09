@@ -99,7 +99,8 @@ internal class CommunitySeeder @Inject constructor(
                         postId = postId,
                         authorId = memberId(author),
                         text = SeedContent.comments[rng.nextInt(SeedContent.comments.size)],
-                        createdAt = createdAt + rng.nextLong(60_000L, day),
+                        // Never in the future: a recent post only has the minutes since it went up.
+                        createdAt = minOf(createdAt + rng.nextLong(60_000L, day), now - 60_000L),
                     )
                 }
                 postRows += PostEntity(

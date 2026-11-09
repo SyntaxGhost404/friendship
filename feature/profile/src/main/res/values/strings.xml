@@ -20,9 +20,6 @@
     <string name="profile_blocked_body">Unblock to see their profile and message each other again.</string>
     <string name="profile_not_found">This profile is no longer available.</string>
     <string name="profile_highlight_counter">%1$d of %2$d</string>
-    <string name="profile_comments_title">Comments</string>
-    <string name="profile_comments_empty">No comments yet. Say something nice.</string>
-    <string name="profile_comment_hint">Add a comment</string>
     <string name="profile_back">Back</string>
     <string name="profile_more">More options</string>
 </resources>

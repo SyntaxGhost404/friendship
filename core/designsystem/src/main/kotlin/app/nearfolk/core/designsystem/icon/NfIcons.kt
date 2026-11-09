@@ -76,6 +76,36 @@ object NfIcons {
         }
     }
 
+    /** A post with lines of text under it: the timeline. */
+    val Feed: ImageVector by lazy {
+        icon("Feed") {
+            stroke { softRect(3.5f, 3.5f, 20.5f, 12.5f, 4.5f) }
+            stroke {
+                moveTo(4f, 16.6f)
+                lineTo(20f, 16.6f)
+                moveTo(4f, 20.2f)
+                lineTo(13.5f, 20.2f)
+            }
+        }
+    }
+
+    val FeedSelected: ImageVector by lazy {
+        icon("FeedSelected") {
+            solid { softRect(2.6f, 2.6f, 21.4f, 13.2f, 5f) }
+            path(
+                fill = null,
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 2.2f,
+                strokeLineCap = StrokeCap.Round,
+            ) {
+                moveTo(4f, 16.8f)
+                lineTo(20f, 16.8f)
+                moveTo(4f, 20.4f)
+                lineTo(13.5f, 20.4f)
+            }
+        }
+    }
+
     private fun PathBuilder.bubble() {
         moveTo(8.5f, 4f)
         lineTo(15.5f, 4f)

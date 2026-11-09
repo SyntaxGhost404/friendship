@@ -113,11 +113,12 @@ class ComponentGalleryScreenshotTest {
                 NfNavigationBar(
                     items = listOf(
                         NfNavItem("Discover", NfIcons.Discover, NfIcons.DiscoverSelected),
+                        NfNavItem("Feed", NfIcons.Feed, NfIcons.FeedSelected),
                         NfNavItem("Messages", NfIcons.Messages, NfIcons.MessagesSelected, badgeCount = 4),
                         NfNavItem("You", NfIcons.You, NfIcons.YouSelected),
                         NfNavItem("Settings", NfIcons.Settings, NfIcons.SettingsSelected),
                     ),
-                    selectedIndex = 1,
+                    selectedIndex = 2,
                     onSelect = {},
                     modifier = Modifier.fillMaxWidth(),
                 )

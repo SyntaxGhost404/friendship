@@ -8,10 +8,10 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
-import app.nearfolk.core.data.media.AttachmentDraftFactory
 import app.nearfolk.core.data.media.PlaybackState
 import app.nearfolk.core.data.media.VoicePlayer
 import app.nearfolk.core.data.repository.ChatRepository
+import app.nearfolk.core.data.repository.CommentThreadFactory
 import app.nearfolk.core.data.repository.MemberRepository
 import app.nearfolk.core.data.repository.PostRepository
 import app.nearfolk.core.data.repository.ProfileRepository
@@ -26,11 +26,9 @@ import app.nearfolk.core.model.SELF_ID
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -60,7 +58,7 @@ class ProfileViewModel @Inject constructor(
     private val postRepository: PostRepository,
     private val chat: ChatRepository,
     private val player: VoicePlayer,
-    drafts: AttachmentDraftFactory,
+    threads: CommentThreadFactory,
 ) : ViewModel() {
     private val route = savedStateHandle.toRoute<MemberProfileRoute>()
     val memberId: String = route.memberId
@@ -81,11 +79,9 @@ class ProfileViewModel @Inject constructor(
 
     val playback: StateFlow<PlaybackState> = player.state
 
-    private val openCommentsFor = MutableStateFlow<String?>(null)
-    val commentsPostId: StateFlow<String?> = openCommentsFor
-    val comments: StateFlow<List<Comment>> = openCommentsFor
-        .flatMapLatest { id -> if (id == null) flowOf(emptyList()) else postRepository.comments(id) }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    private val thread = threads.create(viewModelScope)
+    val commentsPostId: StateFlow<String?> = thread.postId
+    val comments: StateFlow<List<Comment>> = thread.comments
 
     private val _events = Channel<ProfileEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
@@ -101,35 +97,19 @@ class ProfileViewModel @Inject constructor(
 
     /** Comment being written for the open post. */
     val commentText = TextFieldState()
-    private val commentMedia = drafts.create(viewModelScope)
-    val commentAttachments: StateFlow<List<DraftAttachment>> = commentMedia.items
-    val attachmentProblems = commentMedia.problems
+    val commentAttachments: StateFlow<List<DraftAttachment>> = thread.attachments
+    val attachmentProblems = thread.problems
 
     fun openComments(postId: String?) {
-        // A draft belongs to one post; switching posts starts fresh.
-        if (postId != null && postId != lastCommentPost) {
-            commentText.clearText()
-            commentMedia.discard()
-            lastCommentPost = postId
-        }
-        openCommentsFor.value = postId
+        if (thread.open(postId)) commentText.clearText()
     }
 
-    private var lastCommentPost: String? = null
+    fun addCommentMedia(sources: List<MediaSource>) = thread.addMedia(sources)
 
-    fun addCommentMedia(sources: List<MediaSource>) = commentMedia.add(sources)
-
-    fun removeCommentAttachment(id: String) = commentMedia.remove(id)
+    fun removeCommentAttachment(id: String) = thread.removeAttachment(id)
 
     fun sendComment() {
-        val id = openCommentsFor.value ?: return
-        val body = commentText.text.toString()
-        val files = commentMedia.ready()
-        if (body.isBlank() && files.isEmpty()) return
-        if (commentAttachments.value.any { it is DraftAttachment.Importing }) return
-        commentText.clearText()
-        commentMedia.handOver()
-        viewModelScope.launch { postRepository.addComment(id, body, files) }
+        if (thread.send(commentText.text.toString())) commentText.clearText()
     }
 
     fun toggleVoice() {
@@ -155,7 +135,7 @@ class ProfileViewModel @Inject constructor(
     }
 
     override fun onCleared() {
-        commentMedia.discard()
+        thread.discard()
         if (player.state.value.path == state.value.member?.voiceIntro?.path) player.stop()
     }
 }
