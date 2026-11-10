@@ -1,6 +1,5 @@
 package app.nearfolk.core.ui
 
-import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -8,7 +7,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,21 +14,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ChatBubbleOutline
-import androidx.compose.material.icons.rounded.Favorite
-import androidx.compose.material.icons.rounded.FavoriteBorder
-import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
@@ -45,7 +36,6 @@ import app.nearfolk.core.designsystem.theme.Nf
 import app.nearfolk.core.designsystem.theme.NfShapes
 import app.nearfolk.core.model.Countries
 import app.nearfolk.core.model.Member
-import app.nearfolk.core.model.Post
 import app.nearfolk.core.model.Presence
 import java.time.Instant
 import java.time.LocalDate
@@ -127,104 +117,6 @@ fun MemberRow(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(top = 2.dp),
                 )
-            }
-        }
-    }
-}
-
-/** One post in a stream. Flat, separated by spacing, media in a squircle frame. */
-@Composable
-fun PostItem(
-    post: Post,
-    onToggleLike: () -> Unit,
-    onOpenComments: () -> Unit,
-    modifier: Modifier = Modifier,
-    onOptions: (() -> Unit)? = null,
-    onOpenAuthor: (() -> Unit)? = null,
-    now: Instant = Instant.now(),
-) {
-    val time = rememberTimeFormat()
-    val haptics = LocalAppHaptics.current
-    Column(modifier.fillMaxWidth().padding(vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Row(
-                Modifier
-                    .weight(1f)
-                    .then(
-                        if (onOpenAuthor == null) {
-                            Modifier
-                        } else {
-                            Modifier
-                                .clip(NfShapes.small)
-                                .clickable(
-                                    onClickLabel = stringResource(R.string.ui_open_profile),
-                                    role = Role.Button,
-                                    onClick = onOpenAuthor,
-                                )
-                        },
-                    ),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                MemberAvatar(post.authorName, post.authorAvatar, 36.dp)
-                Spacer(Modifier.width(10.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(post.authorName, style = Nf.type.label, color = Nf.colors.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(time.relative(post.createdAt, now), style = Nf.type.labelSmall, color = Nf.colors.textTertiary)
-                }
-            }
-            if (onOptions != null) {
-                NfIconButton(Icons.Rounded.MoreHoriz, stringResource(R.string.ui_post_options), onOptions, size = 36.dp, tint = Nf.colors.textSecondary)
-            }
-        }
-        if (post.caption.isNotBlank()) {
-            Text(post.caption, style = Nf.type.body, color = Nf.colors.textPrimary)
-        }
-        post.media?.let { media ->
-            MediaImage(
-                media,
-                Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(4f / 3f)
-                    .clip(NfShapes.large),
-            )
-        }
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            val bounce = remember { Animatable(1f) }
-            LaunchedEffect(post.likedByMe) {
-                if (post.likedByMe) {
-                    bounce.snapTo(0.7f)
-                    bounce.animateTo(1f, androidx.compose.animation.core.spring(dampingRatio = 0.35f, stiffness = 500f))
-                }
-            }
-            Row(
-                Modifier
-                    .clip(NfShapes.small)
-                    .clickable(role = Role.Button) {
-                        haptics.perform(if (post.likedByMe) HapticKind.Tick else HapticKind.Confirm)
-                        onToggleLike()
-                    }
-                    .padding(horizontal = 8.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                Icon(
-                    if (post.likedByMe) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
-                    contentDescription = stringResource(if (post.likedByMe) R.string.ui_unlike else R.string.ui_like),
-                    tint = if (post.likedByMe) Nf.colors.danger else Nf.colors.textSecondary,
-                    modifier = Modifier.size(20.dp).graphicsLayer { scaleX = bounce.value; scaleY = bounce.value },
-                )
-                Text(post.likeCount.toString(), style = Nf.type.label, color = Nf.colors.textSecondary)
-            }
-            Row(
-                Modifier
-                    .clip(NfShapes.small)
-                    .clickable(role = Role.Button) { onOpenComments() }
-                    .padding(horizontal = 8.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                Icon(Icons.Rounded.ChatBubbleOutline, stringResource(R.string.ui_comments), tint = Nf.colors.textSecondary, modifier = Modifier.size(19.dp))
-                Text(post.commentCount.toString(), style = Nf.type.label, color = Nf.colors.textSecondary)
             }
         }
     }

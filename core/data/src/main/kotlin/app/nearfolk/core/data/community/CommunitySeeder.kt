@@ -103,15 +103,19 @@ internal class CommunitySeeder @Inject constructor(
                         createdAt = minOf(createdAt + rng.nextLong(60_000L, day), now - 60_000L),
                     )
                 }
+                val likes = rng.nextInt(140)
                 postRows += PostEntity(
                     id = postId,
                     authorId = id,
                     caption = SeedContent.captions[rng.nextInt(SeedContent.captions.size)],
                     media = if (rng.nextFloat() < 0.65f) MediaRef.Generated(rng.nextLong()).encode() else null,
                     createdAt = createdAt,
-                    likeCount = rng.nextInt(140),
+                    likeCount = likes,
                     commentCount = commentCount,
                     likedByMe = false,
+                    viewCount = likes * (6 + rng.nextInt(10)) + commentCount * 14 + 10 + rng.nextInt(80),
+                    saveCount = likes / (6 + rng.nextInt(8)),
+                    shareCount = likes / (12 + rng.nextInt(16)),
                 )
             }
 

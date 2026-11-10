@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AddPhotoAlternate
+import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.GridView
 import androidx.compose.material.icons.rounded.Mic
@@ -25,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -58,6 +60,7 @@ import java.time.LocalDate
 @Serializable data class CropRoute(val uri: String, val target: String)
 @Serializable data object VoiceIntroRoute
 @Serializable data object MyPostsRoute
+@Serializable data object SavedPostsRoute
 @Serializable data object ComposePostRoute
 @Serializable data object HighlightsRoute
 @Serializable data object ActivityRoute
@@ -68,6 +71,7 @@ fun YouRouteScreen(
     onEdit: () -> Unit,
     onNewPost: () -> Unit,
     onMyPosts: () -> Unit,
+    onSaved: () -> Unit,
     onHighlights: () -> Unit,
     onActivity: () -> Unit,
     onVoice: () -> Unit,
@@ -76,7 +80,7 @@ fun YouRouteScreen(
     viewModel: YouViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    YouScreen(state, onPreview, onEdit, onNewPost, onMyPosts, onHighlights, onActivity, onVoice, onJournal, onPlus)
+    YouScreen(state, onPreview, onEdit, onNewPost, onMyPosts, onSaved, onHighlights, onActivity, onVoice, onJournal, onPlus)
 }
 
 @Composable
@@ -86,6 +90,7 @@ fun YouScreen(
     onEdit: () -> Unit,
     onNewPost: () -> Unit,
     onMyPosts: () -> Unit,
+    onSaved: () -> Unit,
     onHighlights: () -> Unit,
     onActivity: () -> Unit,
     onVoice: () -> Unit,
@@ -161,6 +166,17 @@ fun YouScreen(
             NfSectionHeader(stringResource(R.string.you_section_manage))
             NfGroup {
                 NfListRow(stringResource(R.string.you_posts), subtitle = stringResource(R.string.you_posts_body), icon = Icons.Rounded.ViewAgenda, onClick = onMyPosts)
+                NfDivider(inset = true)
+                NfListRow(
+                    stringResource(R.string.you_saved),
+                    subtitle = if (state.savedCount == 0) {
+                        stringResource(R.string.you_saved_none)
+                    } else {
+                        pluralStringResource(R.plurals.you_saved_body, state.savedCount, state.savedCount)
+                    },
+                    icon = Icons.Rounded.Bookmark,
+                    onClick = onSaved,
+                )
                 NfDivider(inset = true)
                 NfListRow(
                     stringResource(R.string.you_highlights),

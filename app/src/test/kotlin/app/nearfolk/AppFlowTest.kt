@@ -1,5 +1,6 @@
 package app.nearfolk
 
+import android.content.Intent
 import android.graphics.Color
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.semantics.SemanticsActions
@@ -26,12 +27,15 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.espresso.Espresso
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.nearfolk.feature.feed.FeedTags
+import app.nearfolk.feature.you.SavedTags
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.captureScreenRoboImage
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Shadows
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import kotlin.math.abs
@@ -40,7 +44,7 @@ import kotlin.math.abs
  * Drives the real app: dependency graph, database, preferences, navigation
  * and the local community. Creates a profile, finds a member with a misspelt
  * search, opens their profile, sends a message and waits for it to be read,
- * then comments on a post in the feed and opens its author's profile.
+ * then comments on, saves and shares a post in the feed and opens its author's profile.
  */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(AndroidJUnit4::class)
@@ -164,6 +168,26 @@ class AppFlowTest {
         captureScreenRoboImage("build/screenshots/flow_5_feed_comments.png")
         Espresso.pressBack()
         rule.waitUntil(5_000) { rule.onAllNodesWithText("Add a comment").fetchSemanticsNodes().isEmpty() }
+
+        // Saving a post offers the way to the saved list under You.
+        rule.onAllNodes(hasContentDescription("Save") and hasClickAction()).onFirst().performClick()
+        waitForText("Saved. Find it under You.")
+        rule.onNodeWithText("View").performClick()
+        rule.waitUntilAtLeastOneExists(hasTestTag(SavedTags.List), 10_000)
+        rule.onRoot().captureRoboImage("build/screenshots/flow_6_saved.png")
+
+        // Taking it out of the list can be undone.
+        rule.onNode(hasContentDescription("Remove from saved") and hasClickAction()).performClick()
+        waitForText("Nothing saved yet")
+        rule.onNodeWithText("Undo").performClick()
+        rule.waitUntilAtLeastOneExists(hasTestTag(SavedTags.List), 10_000)
+        Espresso.pressBack()
+        rule.waitUntilAtLeastOneExists(hasTestTag(FeedTags.List), 10_000)
+
+        // Share hands the post to the system share sheet.
+        rule.onAllNodes(hasContentDescription("Share") and hasClickAction()).onFirst().performClick()
+        val shared = Shadows.shadowOf(rule.activity).nextStartedActivity
+        assertEquals(Intent.ACTION_CHOOSER, shared.action)
 
         // The author of a post opens their profile.
         rule.onAllNodes(opensProfile).onFirst().performClick()

@@ -48,6 +48,11 @@ data class PostEntity(
     val likeCount: Int,
     val commentCount: Int,
     val likedByMe: Boolean,
+    @ColumnInfo(defaultValue = "0") val viewCount: Int = 0,
+    @ColumnInfo(defaultValue = "0") val saveCount: Int = 0,
+    @ColumnInfo(defaultValue = "0") val shareCount: Int = 0,
+    /** When you saved the post, or null if you have not. */
+    val savedAt: Long? = null,
 )
 
 @Entity(tableName = "comments", indices = [Index("postId")])
@@ -140,6 +145,10 @@ data class PostRow(
     val likeCount: Int,
     val commentCount: Int,
     val likedByMe: Boolean,
+    val viewCount: Int,
+    val saveCount: Int,
+    val shareCount: Int,
+    val savedAt: Long?,
     val authorName: String,
     val authorAvatar: String?,
 )

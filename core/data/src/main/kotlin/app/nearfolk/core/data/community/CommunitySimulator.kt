@@ -37,6 +37,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.time.Duration
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -45,7 +46,8 @@ import kotlin.random.Random
 /**
  * Stands in for the network while the app runs without a backend. It moves
  * members online and offline, answers your messages, sends a few first
- * messages to new profiles, posts now and then and reacts to your posts. Everything it does goes
+ * messages to new profiles, posts now and then, reads, saves and shares
+ * recent posts and reacts to your posts. Everything it does goes
  * through the same tables a real sync layer would write to.
  */
 @Singleton
@@ -81,6 +83,7 @@ class CommunitySimulator @Inject internal constructor(
             launch { presenceLoop() }
             launch { introLoop() }
             launch { postLoop() }
+            launch { engagementLoop() }
         }
     }
 
@@ -172,6 +175,26 @@ class CommunitySimulator @Inject internal constructor(
             }
     }
 
+    /**
+     * People read the feed while you do: recent posts, yours included, gather
+     * views, and now and then a save or a share, so the counters stay live.
+     */
+    private suspend fun engagementLoop() {
+        combine(prefs.accountState, visibility.foreground) { state, fg -> state == AccountState.Active && fg }
+            .distinctUntilChanged()
+            .collectLatest { active ->
+                while (active && scope.isActive) {
+                    delay(random.nextLong(12_000, 30_000))
+                    val recent = posts.idsSince(time.now().minus(Duration.ofDays(7)).toEpochMilli())
+                    if (recent.isEmpty()) continue
+                    val seen = recent.shuffled(random).take(2 + random.nextInt(5))
+                    posts.addViews(seen, 1 + random.nextInt(9))
+                    if (random.nextFloat() < 0.25f) posts.incrementSaves(seen.first())
+                    if (random.nextFloat() < 0.12f) posts.incrementShares(seen.last())
+                }
+            }
+    }
+
     /** A pull to refresh sometimes finds a post that was just published. */
     suspend fun refreshFeed() {
         if (random.nextFloat() < 0.5f) publishPost()
@@ -190,6 +213,8 @@ class CommunitySimulator @Inject internal constructor(
                     likeCount = 0,
                     commentCount = 0,
                     likedByMe = false,
+                    // Its author saw it go up.
+                    viewCount = 1,
                 ),
             ),
         )
@@ -281,6 +306,9 @@ class CommunitySimulator @Inject internal constructor(
             people.forEachIndexed { i, person ->
                 delay(random.nextLong(6_000, 20_000) * (i + 1))
                 if (posts.get(postId) == null) return@launch
+                // More people see a post than react to it.
+                posts.addViews(listOf(postId), 3 + random.nextInt(12))
+                if (random.nextFloat() < 0.2f) posts.incrementSaves(postId)
                 val now = time.now().toEpochMilli()
                 val comment = i % 2 == 1
                 if (comment) {

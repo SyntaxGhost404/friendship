@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!-- Told by the share sheet which app a post went to, so the share count can go up. -->
+        <receiver
+            android:name=".share.PostShareReceiver"
+            android:exported="false" />
+    </application>
+
+</manifest>

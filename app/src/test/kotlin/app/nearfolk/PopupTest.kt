@@ -32,6 +32,7 @@ import app.nearfolk.core.ui.CountryPickerSheet
 import app.nearfolk.core.ui.MenuAction
 import app.nearfolk.core.ui.NfDatePickerDialog
 import app.nearfolk.core.ui.NfMenu
+import app.nearfolk.core.ui.PostStatsSheet
 import app.nearfolk.core.ui.ReportSheet
 import com.github.takahirom.roborazzi.captureScreenRoboImage
 import java.time.LocalDate
@@ -169,6 +170,13 @@ class PopupTest {
             )
         }
         capture("confirm_dialog_${if (dark) "dark" else "light"}")
+    }
+
+    @Test
+    fun postStatsDark() {
+        show(true) { PostStatsSheet(Fixtures.feed[3], onDismiss = {}) }
+        rule.onNodeWithText("15,320").assertIsDisplayed()
+        capture("post_stats_dark")
     }
 
     @Test

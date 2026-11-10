@@ -17,9 +17,8 @@ import org.junit.runner.RunWith
 import java.io.File
 
 /**
- * Builds a version 1 database from the exported schema, as the first release
- * created it on devices, then opens it with the current code. Existing chats
- * must survive and gain empty attachment lists.
+ * Builds old databases from their exported schemas, as earlier releases
+ * created them on devices, then opens them with the current code.
  */
 @RunWith(AndroidJUnit4::class)
 class DatabaseMigrationTest {
@@ -30,22 +29,8 @@ class DatabaseMigrationTest {
         val name = "migration_${System.nanoTime()}.db"
         val file = context.getDatabasePath(name).apply { parentFile?.mkdirs() }
 
-        val schema = JSONObject(File("../database/schemas/app.nearfolk.core.database.NearfolkDatabase/1.json").readText())
-            .getJSONObject("database")
         SQLiteDatabase.openOrCreateDatabase(file, null).use { db ->
-            val entities = schema.getJSONArray("entities")
-            for (i in 0 until entities.length()) {
-                val entity = entities.getJSONObject(i)
-                val table = entity.getString("tableName")
-                db.execSQL(entity.getString("createSql").replace("\${TABLE_NAME}", table))
-                entity.optJSONArray("indices")?.let { indices ->
-                    for (j in 0 until indices.length()) {
-                        db.execSQL(indices.getJSONObject(j).getString("createSql").replace("\${TABLE_NAME}", table))
-                    }
-                }
-            }
-            val setup = schema.getJSONArray("setupQueries")
-            for (i in 0 until setup.length()) db.execSQL(setup.getString(i))
+            createSchema(db, 1)
             db.execSQL(
                 "INSERT INTO conversations (id, peerId, state, createdAt, lastActivityAt, unreadCount, muted, peerHasReplied, " +
                     "lastMessageId, lastMessageText, lastMessageSenderId, lastMessageAt, lastMessageStatus) " +
@@ -65,7 +50,57 @@ class DatabaseMigrationTest {
             val convo = room.conversationDao().get("c1")!!
             assertEquals("[]", convo.lastMessageAttachments)
             assertEquals("[]", room.commentDao().forPost("p1").single().attachments)
-            assertEquals(2, room.openHelper.readableDatabase.version)
+            assertEquals(3, room.openHelper.readableDatabase.version)
+        } finally {
+            room.close()
+            context.deleteDatabase(name)
+        }
+    }
+
+    /** Creates the tables exactly as the exported schema of [version] describes them. */
+    private fun createSchema(db: SQLiteDatabase, version: Int) {
+        val schema = JSONObject(File("../database/schemas/app.nearfolk.core.database.NearfolkDatabase/$version.json").readText())
+            .getJSONObject("database")
+        val entities = schema.getJSONArray("entities")
+        for (i in 0 until entities.length()) {
+            val entity = entities.getJSONObject(i)
+            val table = entity.getString("tableName")
+            db.execSQL(entity.getString("createSql").replace("\${TABLE_NAME}", table))
+            entity.optJSONArray("indices")?.let { indices ->
+                for (j in 0 until indices.length()) {
+                    db.execSQL(indices.getJSONObject(j).getString("createSql").replace("\${TABLE_NAME}", table))
+                }
+            }
+        }
+        val setup = schema.getJSONArray("setupQueries")
+        for (i in 0 until setup.length()) db.execSQL(setup.getString(i))
+        db.version = version
+    }
+
+    @Test
+    fun version2PostsGetEstimatedCounters() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val name = "migration_${System.nanoTime()}.db"
+        val file = context.getDatabasePath(name).apply { parentFile?.mkdirs() }
+        SQLiteDatabase.openOrCreateDatabase(file, null).use { db ->
+            createSchema(db, 2)
+            db.execSQL(
+                "INSERT INTO posts (id, authorId, caption, media, createdAt, likeCount, commentCount, likedByMe) " +
+                    "VALUES ('p1', 'm1', 'hello', NULL, 1, 18, 2, 1)",
+            )
+        }
+
+        val room = Room.databaseBuilder(context, NearfolkDatabase::class.java, name).allowMainThreadQueries().build()
+        try {
+            val post = room.postDao().get("p1")!!
+            assertEquals("hello", post.caption)
+            assertEquals(18, post.likeCount)
+            assertTrue(post.likedByMe)
+            // 18 likes * 9 + 2 comments * 14 + 12, plus up to 89 more.
+            assertTrue("views ${post.viewCount}", post.viewCount in 202..291)
+            assertEquals(2, post.saveCount)
+            assertEquals(1, post.shareCount)
+            assertEquals(null, post.savedAt)
         } finally {
             room.close()
             context.deleteDatabase(name)

@@ -13,7 +13,16 @@ data class Post(
     val likeCount: Int,
     val commentCount: Int,
     val likedByMe: Boolean,
-)
+    /** Times the post has been seen, by anyone. */
+    val viewCount: Int = 0,
+    /** How many people keep the post in their saved list. */
+    val saveCount: Int = 0,
+    val shareCount: Int = 0,
+    /** When you saved the post, or null if it is not in your saved list. */
+    val savedAt: Instant? = null,
+) {
+    val savedByMe: Boolean get() = savedAt != null
+}
 
 data class Comment(
     val id: String,

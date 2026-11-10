@@ -17,11 +17,14 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.nearfolk.core.designsystem.theme.NearfolkTheme
 import app.nearfolk.core.model.Post
 import app.nearfolk.core.model.SELF_ID
+import app.nearfolk.core.ui.PostActions
 import app.nearfolk.feature.feed.FeedScreen
 import app.nearfolk.feature.feed.FeedTags
 import java.time.Instant
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -40,6 +43,7 @@ class FeedTest {
     private var timeline = (1..30).map { post("p$it", "m$it", minutesAgo = it * 10L) }
     private val pages = MutableStateFlow(PagingData.from(timeline))
     private val opened = mutableListOf<String>()
+    private val viewed = linkedSetOf<String>()
 
     private fun post(id: String, author: String, minutesAgo: Long) =
         Post(id, author, "Member $author", null, "Post $id", null, start.minusSeconds(minutesAgo * 60), 0, 0, false)
@@ -58,9 +62,8 @@ class FeedTest {
                         posts = pages.collectAsLazyPagingItems(),
                         refreshing = false,
                         onRefresh = {},
-                        onToggleLike = {},
-                        onOpenComments = {},
-                        onOpenMember = { opened += it },
+                        actions = PostActions({}, {}, {}, {}, {}, onOpenAuthor = { opened += it.authorId }),
+                        onViewed = { viewed += it },
                         onNewPost = {},
                         now = start,
                     )
@@ -94,6 +97,16 @@ class FeedTest {
         publish(post("mine", SELF_ID, minutesAgo = 0))
         rule.onNodeWithText("Post mine").assertIsDisplayed()
         rule.onNodeWithText("New posts").assertDoesNotExist()
+    }
+
+    @Test
+    fun postsOnScreenCountAsViewed() {
+        show()
+        assertTrue("first post seen", "p1" in viewed)
+        assertFalse("far below the fold", "p30" in viewed)
+        list().performScrollToIndex(29)
+        rule.waitForIdle()
+        assertTrue("seen after scrolling", "p30" in viewed)
     }
 
     @Test

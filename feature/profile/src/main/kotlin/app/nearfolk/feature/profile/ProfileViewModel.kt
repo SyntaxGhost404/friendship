@@ -95,6 +95,12 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch { postRepository.toggleLike(postId) }
     }
 
+    fun toggleSave(postId: String) {
+        viewModelScope.launch { postRepository.toggleSave(postId) }
+    }
+
+    fun recordView(postId: String) = postRepository.recordView(postId)
+
     /** Comment being written for the open post. */
     val commentText = TextFieldState()
     val commentAttachments: StateFlow<List<DraftAttachment>> = thread.attachments

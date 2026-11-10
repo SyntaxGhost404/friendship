@@ -55,6 +55,12 @@ class FeedViewModel @Inject constructor(
         viewModelScope.launch { posts.toggleLike(postId) }
     }
 
+    fun toggleSave(postId: String) {
+        viewModelScope.launch { posts.toggleSave(postId) }
+    }
+
+    fun recordView(postId: String) = posts.recordView(postId)
+
     fun openComments(postId: String?) {
         if (thread.open(postId)) commentText.clearText()
     }

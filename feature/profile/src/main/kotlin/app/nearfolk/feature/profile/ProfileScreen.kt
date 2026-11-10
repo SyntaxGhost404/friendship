@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Block
@@ -46,7 +47,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
+import app.nearfolk.core.data.share.PostSharing
 import app.nearfolk.core.data.media.PlaybackState
 import app.nearfolk.core.designsystem.component.NfButton
 import app.nearfolk.core.designsystem.component.NfButtonSize
@@ -77,7 +80,12 @@ import app.nearfolk.core.ui.MediaImage
 import app.nearfolk.core.ui.MemberAvatar
 import app.nearfolk.core.ui.MenuAction
 import app.nearfolk.core.ui.NfMenu
+import app.nearfolk.core.ui.PostActions
+import app.nearfolk.core.ui.PostContentType
 import app.nearfolk.core.ui.PostItem
+import app.nearfolk.core.ui.PostStatsSheet
+import app.nearfolk.core.ui.TrackPostViews
+import app.nearfolk.core.ui.rememberSavedNotice
 import app.nearfolk.core.ui.ReportSheet
 import app.nearfolk.core.ui.SquareTile
 import app.nearfolk.core.ui.StreakCounter
@@ -98,6 +106,7 @@ fun ProfileRouteScreen(
     onBack: () -> Unit,
     onOpenChat: (String) -> Unit,
     onOpenJournal: (String) -> Unit,
+    onOpenSaved: () -> Unit,
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -119,6 +128,20 @@ fun ProfileRouteScreen(
             }
         }
     }
+    val savedNotice = rememberSavedNotice(onOpenSaved)
+    var statsFor by rememberSaveable { mutableStateOf<String?>(null) }
+    val actions = remember(viewModel, context, savedNotice) {
+        PostActions(
+            onToggleLike = { viewModel.toggleLike(it.id) },
+            onOpenComments = { viewModel.openComments(it.id) },
+            onToggleSave = {
+                viewModel.toggleSave(it.id)
+                savedNotice(it.savedByMe)
+            },
+            onShare = { PostSharing.share(context, it) },
+            onOpenStats = { statsFor = it.id },
+        )
+    }
     ProfileScreen(
         state = state,
         posts = posts,
@@ -126,8 +149,8 @@ fun ProfileRouteScreen(
         onBack = onBack,
         onMessage = viewModel::message,
         onJournal = { onOpenJournal(viewModel.memberId) },
-        onToggleLike = viewModel::toggleLike,
-        onOpenComments = viewModel::openComments,
+        postActions = actions,
+        onViewed = viewModel::recordView,
         onToggleVoice = viewModel::toggleVoice,
         onReport = viewModel::report,
         onBlock = viewModel::block,
@@ -144,6 +167,9 @@ fun ProfileRouteScreen(
             onSend = viewModel::sendComment,
         )
     }
+    statsFor?.let { id ->
+        posts.itemSnapshotList.items.firstOrNull { it.id == id }?.let { PostStatsSheet(it, onDismiss = { statsFor = null }) }
+    }
 }
 
 @Composable
@@ -154,8 +180,8 @@ fun ProfileScreen(
     onBack: () -> Unit,
     onMessage: () -> Unit,
     onJournal: () -> Unit,
-    onToggleLike: (String) -> Unit,
-    onOpenComments: (String) -> Unit,
+    postActions: PostActions,
+    onViewed: (String) -> Unit,
     onToggleVoice: () -> Unit,
     onReport: (app.nearfolk.core.model.ReportReason, String?) -> Unit,
     onBlock: () -> Unit,
@@ -167,12 +193,14 @@ fun ProfileScreen(
     var blocking by rememberSaveable { mutableStateOf(false) }
     var viewerIndex by rememberSaveable { mutableStateOf<Int?>(null) }
     val member = state.member
+    val listState = rememberLazyListState()
+    TrackPostViews(listState, onViewed)
 
     Box(Modifier.fillMaxSize().background(Nf.colors.canvas)) {
         when {
             state.loading -> NfSpinner(Modifier.windowInsetsPadding(WindowInsets.statusBars).padding(top = 80.dp))
             member == null -> NfEmptyState(Icons.Rounded.Visibility, stringResource(R.string.profile_not_found), "", Modifier.padding(top = 80.dp))
-            else -> LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 32.dp)) {
+            else -> LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(bottom = 32.dp)) {
                 item(key = "header") { Header(member, state, now, onMessage, onJournal) }
                 if (state.blocked) {
                     item(key = "blocked") {
@@ -185,7 +213,7 @@ fun ProfileScreen(
                         )
                     }
                 } else {
-                    profileBody(member, state, playback, posts, now, onToggleVoice, onToggleLike, onOpenComments) { viewerIndex = it }
+                    profileBody(member, state, playback, posts, now, onToggleVoice, postActions) { viewerIndex = it }
                 }
             }
         }
@@ -302,8 +330,7 @@ private fun LazyListScope.profileBody(
     posts: LazyPagingItems<Post>,
     now: Instant,
     onToggleVoice: () -> Unit,
-    onToggleLike: (String) -> Unit,
-    onOpenComments: (String) -> Unit,
+    postActions: PostActions,
     onOpenHighlight: (Int) -> Unit,
 ) {
     item(key = "streak") {
@@ -365,10 +392,10 @@ private fun LazyListScope.profileBody(
     item(key = "postsHeader") {
         NfSectionHeader(stringResource(R.string.profile_posts), Modifier.padding(horizontal = 16.dp))
     }
-    items(count = posts.itemCount, key = posts.itemKey { it.id }) { index ->
+    items(count = posts.itemCount, key = posts.itemKey { it.id }, contentType = posts.itemContentType { PostContentType }) { index ->
         val post = posts[index] ?: return@items
         Column(Modifier.padding(horizontal = 20.dp)) {
-            PostItem(post, onToggleLike = { onToggleLike(post.id) }, onOpenComments = { onOpenComments(post.id) }, now = now)
+            PostItem(post, postActions, now = now)
             NfDivider()
         }
     }

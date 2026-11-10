@@ -89,6 +89,8 @@ import app.nearfolk.feature.you.HighlightsRoute
 import app.nearfolk.feature.you.HighlightsRouteScreen
 import app.nearfolk.feature.you.MyPostsRoute
 import app.nearfolk.feature.you.MyPostsRouteScreen
+import app.nearfolk.feature.you.SavedPostsRoute
+import app.nearfolk.feature.you.SavedPostsRouteScreen
 import app.nearfolk.feature.you.VoiceIntroRoute
 import app.nearfolk.feature.you.VoiceIntroRouteScreen
 import app.nearfolk.feature.you.YouRoute
@@ -169,6 +171,7 @@ fun MainScaffold(viewModel: MainViewModel) {
                     FeedRouteScreen(
                         onOpenMember = { nav.navigate(MemberProfileRoute(it)) },
                         onNewPost = { nav.navigate(ComposePostRoute) },
+                        onOpenSaved = { nav.navigate(SavedPostsRoute) { launchSingleTop = true } },
                     )
                 }
                 composable<MessagesRoute> {
@@ -184,6 +187,7 @@ fun MainScaffold(viewModel: MainViewModel) {
                         onEdit = { nav.navigate(EditProfileRoute) },
                         onNewPost = { nav.navigate(ComposePostRoute) },
                         onMyPosts = { nav.navigate(MyPostsRoute) },
+                        onSaved = { nav.navigate(SavedPostsRoute) { launchSingleTop = true } },
                         onHighlights = { nav.navigate(HighlightsRoute) },
                         onActivity = { nav.navigate(ActivityRoute) },
                         onVoice = { nav.navigate(VoiceIntroRoute) },
@@ -213,6 +217,7 @@ fun MainScaffold(viewModel: MainViewModel) {
                         onBack = nav::back,
                         onOpenChat = { nav.navigate(ChatRoute(it)) { launchSingleTop = true } },
                         onOpenJournal = { nav.navigate(PublicJournalRoute(it)) },
+                        onOpenSaved = { nav.navigate(SavedPostsRoute) { launchSingleTop = true } },
                     )
                 }
                 composable<ChatRoute> {
@@ -242,7 +247,14 @@ fun MainScaffold(viewModel: MainViewModel) {
                     MyPostsRouteScreen(
                         onBack = nav::back,
                         onNewPost = { nav.navigate(ComposePostRoute) },
-                        onOpenComments = { nav.navigate(MemberProfileRoute(SELF_ID)) },
+                        onOpenSaved = { nav.navigate(SavedPostsRoute) { launchSingleTop = true } },
+                    )
+                }
+                composable<SavedPostsRoute> {
+                    SavedPostsRouteScreen(
+                        onBack = nav::back,
+                        onOpenMember = { nav.navigate(MemberProfileRoute(it)) },
+                        onOpenFeed = { nav.openTab(Tab.Feed) },
                     )
                 }
                 composable<ComposePostRoute> { ComposePostRouteScreen(onDone = nav::back) }

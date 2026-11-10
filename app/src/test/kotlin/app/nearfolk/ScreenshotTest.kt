@@ -25,6 +25,7 @@ import app.nearfolk.core.model.Post
 import app.nearfolk.core.ui.AppInfo
 import app.nearfolk.core.ui.LocalAppInfo
 import app.nearfolk.core.ui.LocalSnackbarHost
+import app.nearfolk.core.ui.PostActions
 import app.nearfolk.feature.discover.DiscoverScreen
 import app.nearfolk.feature.discover.DiscoverUiState
 import app.nearfolk.feature.feed.FeedScreen
@@ -38,6 +39,7 @@ import app.nearfolk.feature.onboarding.OnboardingScreen
 import app.nearfolk.feature.onboarding.OnboardingState
 import app.nearfolk.feature.profile.ProfileScreen
 import app.nearfolk.feature.profile.ProfileUiState
+import app.nearfolk.feature.you.SavedPostsScreen
 import app.nearfolk.feature.you.YouScreen
 import app.nearfolk.feature.you.YouUiState
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -112,7 +114,7 @@ class ScreenshotTest {
         FeedScreen(
             posts = posts,
             refreshing = false,
-            onRefresh = {}, onToggleLike = {}, onOpenComments = {}, onOpenMember = {}, onNewPost = {},
+            onRefresh = {}, actions = PostActions.None, onViewed = {}, onNewPost = {},
             now = Fixtures.now,
         )
     }
@@ -122,7 +124,7 @@ class ScreenshotTest {
         FeedScreen(
             posts = posts,
             refreshing = false,
-            onRefresh = {}, onToggleLike = {}, onOpenComments = {}, onOpenMember = {}, onNewPost = {},
+            onRefresh = {}, actions = PostActions.None, onViewed = {}, onNewPost = {},
             now = Fixtures.now,
         )
     }
@@ -206,7 +208,7 @@ class ScreenshotTest {
             state = ProfileUiState(false, Fixtures.amara, Fixtures.highlights, journalCount = 2, blocked = false, preview = false),
             posts = posts,
             playback = PlaybackState(),
-            onBack = {}, onMessage = {}, onJournal = {}, onToggleLike = {}, onOpenComments = {}, onToggleVoice = {},
+            onBack = {}, onMessage = {}, onJournal = {}, postActions = PostActions.None, onViewed = {}, onToggleVoice = {},
             onReport = { _, _ -> }, onBlock = {}, onUnblock = {},
             now = Fixtures.now,
         )
@@ -217,9 +219,22 @@ class ScreenshotTest {
 
     private fun you(dark: Boolean) = shot("you", dark, withBar = 3) {
         YouScreen(
-            YouUiState(Fixtures.me, PostStats(4, 37, 6), unseenActivity = 2, isPlus = false, passcodeSet = true),
-            {}, {}, {}, {}, {}, {}, {}, {}, {},
+            YouUiState(Fixtures.me, PostStats(4, 37, 6), unseenActivity = 2, isPlus = false, passcodeSet = true, savedCount = 3),
+            {}, {}, {}, {}, {}, {}, {}, {}, {}, {},
         )
+    }
+
+    @Test fun savedDark() = saved(true)
+    @Test fun savedLight() = saved(false)
+
+    private fun saved(dark: Boolean) = shot("saved", dark) {
+        val posts = flowOf(PagingData.from(Fixtures.saved)).collectAsLazyPagingItems()
+        SavedPostsScreen(posts, count = Fixtures.saved.size, actions = PostActions.None, onViewed = {}, onBack = {}, onOpenFeed = {}, now = Fixtures.now)
+    }
+
+    @Test fun savedEmptyLight() = shot("saved_empty", false) {
+        val posts = flowOf(PagingData.empty<Post>(sourceLoadStates)).collectAsLazyPagingItems()
+        SavedPostsScreen(posts, count = 0, actions = PostActions.None, onViewed = {}, onBack = {}, onOpenFeed = {}, now = Fixtures.now)
     }
 
     @Test fun welcomeDark() = shot("welcome", true) {

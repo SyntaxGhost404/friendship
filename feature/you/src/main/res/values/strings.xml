@@ -13,6 +13,12 @@
     <string name="you_new_post_body">Share a moment with a caption</string>
     <string name="you_posts">Your posts</string>
     <string name="you_posts_body">Review or delete what you’ve shared</string>
+    <string name="you_saved">Saved</string>
+    <string name="you_saved_none">Posts you bookmark stay here, visible only to you</string>
+    <plurals name="you_saved_body">
+        <item quantity="one">%1$d saved post, visible only to you</item>
+        <item quantity="other">%1$d saved posts, visible only to you</item>
+    </plurals>
     <string name="you_highlights">Highlights</string>
     <string name="you_highlights_body">%1$d of %2$d photos picked</string>
     <string name="you_activity">Activity</string>
@@ -78,6 +84,16 @@
     <string name="voice_limit">Up to %1$d seconds. Plus allows %2$d.</string>
     <string name="voice_limit_plus">Up to %1$d seconds.</string>
 
+    <string name="saved_title">Saved</string>
+    <plurals name="saved_subtitle">
+        <item quantity="one">%1$d post, visible only to you</item>
+        <item quantity="other">%1$d posts, visible only to you</item>
+    </plurals>
+    <string name="saved_empty_title">Nothing saved yet</string>
+    <string name="saved_empty_body">Tap the bookmark under any post to keep it here. Only you can see what you save.</string>
+    <string name="saved_browse">Browse the feed</string>
+    <string name="saved_removed">Removed from saved</string>
+    <string name="saved_undo">Undo</string>
     <string name="posts_title">Your posts</string>
     <string name="posts_empty_title">Nothing posted yet</string>
     <string name="posts_empty_body">Posts show up on your profile for everyone to see.</string>

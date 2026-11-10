@@ -106,6 +106,27 @@ interface PostDao {
     )
     fun pagingFeed(selfId: String): PagingSource<Int, PostRow>
 
+    /** Posts you saved, the most recently saved first, from authors you can still see. */
+    @Query(
+        """
+        SELECT p.*, m.displayName AS authorName, m.avatar AS authorAvatar
+        FROM posts p JOIN members m ON m.id = p.authorId
+        WHERE p.savedAt IS NOT NULL
+            AND (m.id = :selfId OR (m.discoverable = 1 AND m.id NOT IN (SELECT memberId FROM blocks)))
+        ORDER BY p.savedAt DESC, p.id DESC
+        """,
+    )
+    fun pagingSaved(selfId: String): PagingSource<Int, PostRow>
+
+    @Query(
+        """
+        SELECT COUNT(*) FROM posts p JOIN members m ON m.id = p.authorId
+        WHERE p.savedAt IS NOT NULL
+            AND (m.id = :selfId OR (m.discoverable = 1 AND m.id NOT IN (SELECT memberId FROM blocks)))
+        """,
+    )
+    fun observeSavedCount(selfId: String): Flow<Int>
+
     @Query(
         """
         SELECT p.*, m.displayName AS authorName, m.avatar AS authorAvatar
@@ -144,6 +165,43 @@ interface PostDao {
 
     @Query("UPDATE posts SET likeCount = likeCount + 1 WHERE id = :id")
     suspend fun incrementLikes(id: String)
+
+    /** Saves the post at [now], or takes it out of your saved list if it is in there. */
+    @Query(
+        """
+        UPDATE posts SET
+            saveCount = MAX(0, saveCount + CASE WHEN savedAt IS NULL THEN 1 ELSE -1 END),
+            savedAt = CASE WHEN savedAt IS NULL THEN :now ELSE NULL END
+        WHERE id = :id
+        """,
+    )
+    suspend fun toggleSave(id: String, now: Long)
+
+    /** Puts the post in your saved list at [savedAt], or removes it when that is null. */
+    @Query(
+        """
+        UPDATE posts SET
+            saveCount = MAX(0, saveCount + CASE
+                WHEN savedAt IS NULL AND :savedAt IS NOT NULL THEN 1
+                WHEN savedAt IS NOT NULL AND :savedAt IS NULL THEN -1
+                ELSE 0 END),
+            savedAt = :savedAt
+        WHERE id = :id
+        """,
+    )
+    suspend fun setSaved(id: String, savedAt: Long?)
+
+    @Query("UPDATE posts SET viewCount = viewCount + :amount WHERE id IN (:ids)")
+    suspend fun addViews(ids: List<String>, amount: Int)
+
+    @Query("UPDATE posts SET saveCount = saveCount + 1 WHERE id = :id")
+    suspend fun incrementSaves(id: String)
+
+    @Query("UPDATE posts SET shareCount = shareCount + 1 WHERE id = :id")
+    suspend fun incrementShares(id: String)
+
+    @Query("SELECT id FROM posts WHERE createdAt >= :since")
+    suspend fun idsSince(since: Long): List<String>
 
     @Query("UPDATE posts SET commentCount = commentCount + 1 WHERE id = :id")
     suspend fun incrementComments(id: String)

@@ -49,6 +49,40 @@
     <string name="ui_like">Like</string>
     <string name="ui_unlike">Remove like</string>
     <string name="ui_comments">Comments</string>
+    <string name="ui_views">Views</string>
+    <string name="ui_save">Save</string>
+    <string name="ui_unsave">Remove from saved</string>
+    <string name="ui_share">Share</string>
+    <string name="ui_saved_notice">Saved. Find it under You.</string>
+    <string name="ui_saved_view">View</string>
+    <plurals name="ui_count_likes">
+        <item quantity="one">%1$s like</item>
+        <item quantity="other">%1$s likes</item>
+    </plurals>
+    <plurals name="ui_count_comments">
+        <item quantity="one">%1$s comment</item>
+        <item quantity="other">%1$s comments</item>
+    </plurals>
+    <plurals name="ui_count_views">
+        <item quantity="one">%1$s view</item>
+        <item quantity="other">%1$s views</item>
+    </plurals>
+    <plurals name="ui_count_saves">
+        <item quantity="one">%1$s save</item>
+        <item quantity="other">%1$s saves</item>
+    </plurals>
+    <plurals name="ui_count_shares">
+        <item quantity="one">%1$s share</item>
+        <item quantity="other">%1$s shares</item>
+    </plurals>
+    <string name="ui_stats_title">Post activity</string>
+    <string name="ui_stats_views">Views</string>
+    <string name="ui_stats_views_body">How many times this post has been seen, yours included. A visit counts once, however often the post scrolls past.</string>
+    <string name="ui_stats_likes">Likes</string>
+    <string name="ui_stats_comments">Comments</string>
+    <string name="ui_stats_saves">Saves</string>
+    <string name="ui_stats_shares">Shares</string>
+    <string name="ui_stats_private">Only totals are shown. Who saved or shared a post stays private.</string>
     <string name="ui_comments_empty">No comments yet. Say something nice.</string>
     <string name="ui_comment_hint">Add a comment</string>
     <string name="ui_open_profile">Open profile</string>

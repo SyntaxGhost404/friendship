@@ -12,27 +12,29 @@ A native Android app for meeting strangers and talking at your own pace. It grew
 | --- | --- | --- | --- |
 | ![](docs/screenshots/flow_2_profile.png) | ![](docs/screenshots/inbox_dark.png) | ![](docs/screenshots/chat_dark.png) | ![](docs/screenshots/chat_request_dark.png) |
 
-| Composer | Journal lock |
-| --- | --- |
-| ![](docs/screenshots/composer_long_dark.png) | ![](docs/screenshots/passcode_dark.png) |
+| Post activity | Saved | You | Composer |
+| --- | --- | --- | --- |
+| ![](docs/screenshots/post_stats_dark.png) | ![](docs/screenshots/saved_light.png) | ![](docs/screenshots/you_dark.png) | ![](docs/screenshots/composer_long_dark.png) |
 
 ## What works today
 
 - **Onboarding**: name, gender, date of birth (18+ only), country, community guidelines, notification permission.
 - **Discover**: dense member list with avatar, presence, age, gender, sign, city and a bio snippet. Gender chips, a filter sheet (online only, countries, age range for Plus), pull to refresh, and typo tolerant name search ("amra" finds "Amara").
-- **Feed**: the second tab (Discover, Feed, Messages, You, Settings). One timeline of everyone's posts, newest first, drawn exactly like the posts on a profile: your own posts and those of members you can find in Discover. Blocked and deactivated members drop out at once. Tap an author to open their profile, like in place, comment in a sheet, write a post from the header. Posts that arrive while you read further down never move the list; a "New posts" pill takes you back up. Your own new post shows right away. Pull to refresh.
+- **Feed**: the second tab (Discover, Feed, Messages, You, Settings). One timeline of everyone's posts, newest first, drawn exactly like the posts on a profile: your own posts and those of members you can find in Discover. Blocked and deactivated members drop out at once. Tap an author to open their profile, write a post from the header. Posts that arrive while you read further down never move the list; a "New posts" pill takes you back up. Your own new post shows right away. Pull to refresh.
+- **Posts**: every post, wherever it appears (feed, profiles, your posts, saved), ends in the same row of five actions that share the width equally, each with a live count: like, comment, views, save and share. Counts are compact under the post (1.2K, 15K) and read in full by screen readers. Views count each post once per app session when at least half of it is on screen, written in small batches so scrolling does not reload the list per post. The views button opens a post activity sheet with every total. Share opens the system share sheet with the post text; the share count goes up only once an app is picked (the chooser reports the choice to `PostShareReceiver`). Saving shows a short note with a way to the saved list.
 - **Profiles**: cover image, avatar, exact last seen time, status, day counter, details, voice intro, highlights grid with a full screen viewer, and an endless post stream with likes and comments. Report and block from the overflow menu.
 - **Composer**: one container for chat messages and comments, with attachments waiting to send, the text, and a fixed action row (attach on the left, send on the right). The text grows up to a quarter of the space visible above the keyboard (3 to 12 lines), then scrolls inside the box. Send stays on screen, dimmed until there is something to send.
 - **Attachments**: up to 10 photos, videos or GIFs per message or comment, from the system photo picker or straight from the keyboard's GIF and sticker panels. Photos are re-encoded without location data; GIFs and stickers keep their animation; videos play in a full screen viewer.
 - **Messages**: chats and requests (first messages from people you have not accepted yet; the message bar stays hidden until you accept, block or delete), archived threads, unread counts, typing state, delivery and read marks, day separators, grouped bubbles, long press to copy.
 - **Safety**: dismissible safety notice per chat, a cap of three messages until the other person replies, report with reasons, block with confirmation (archives the thread), delete chat with confirmation, blocked members list.
-- **You**: profile preview as others see it, edit identity, avatar and cover crop (pan and pinch in a squircle frame), voice intro recording, posts, highlights, and an activity feed for likes and comments.
+- **You**: profile preview as others see it, edit identity, avatar and cover crop (pan and pinch in a squircle frame), voice intro recording, posts (with comments in place), saved posts, highlights, and an activity feed for likes and comments.
+- **Saved**: under You, Manage, Saved. Every post you bookmarked, the most recently saved first, with the same actions as anywhere else. Only you see the list; posts from people you block drop out of it until you unblock them. Taking a post out can be undone from the note that follows, and it returns to its old place.
 - **Journal**: private or public entries with a mood, protected by a 6 digit passcode (salted PBKDF2, escalating lockout, relocks when the app goes to the background).
 - **Settings**: system, light or dark theme plus a true black option, notification and haptic toggles, Plus plans, support and bug report by email, guidelines, privacy, terms, licenses, deactivate, delete account (three steps, typed confirmation), sign out.
 
 ## The network is simulated for now
 
-There is no backend yet. `core:data` ships a local implementation of every repository plus `CommunitySimulator`, which seeds 40 sample members with posts, highlights and journals, moves people online and offline, answers your messages, sends a few first messages to new profiles, publishes a new post every few minutes while the app is open and reacts to your posts. All of it writes to the same Room tables a real sync layer would, so screens do not know the difference. Settings says plainly that community data is a local sample, and Plus says that store billing is not connected.
+There is no backend yet. `core:data` ships a local implementation of every repository plus `CommunitySimulator`, which seeds 40 sample members with posts, highlights and journals, moves people online and offline, answers your messages, sends a few first messages to new profiles, publishes a new post every few minutes while the app is open, keeps views, saves and shares on recent posts moving, and reacts to your posts. All of it writes to the same Room tables a real sync layer would, so screens do not know the difference. Settings says plainly that community data is a local sample, and Plus says that store billing is not connected.
 
 Choosing the backend is the main decision for the next cycle. The seams are ready:
 
@@ -90,7 +92,7 @@ Requirements: JDK 17 or newer and the Android SDK with platform 37.
 ./gradlew verifyCopyPunctuation       # copy rule check
 ```
 
-`AppFlowTest` runs the real app on Robolectric: it creates a profile, searches with a typo, opens a profile, sends a message and waits for the read mark, then opens the feed, comments on a post and opens its author. `ScreenshotTest` renders the main screens in both themes and `PopupTest` captures every popup; pass `-Proborazzi.test.record=true` to write the images to `app/build/screenshots`.
+`AppFlowTest` runs the real app on Robolectric: it creates a profile, searches with a typo, opens a profile, sends a message and waits for the read mark, then opens the feed, comments on a post, saves it, removes it from Saved and undoes that, shares a post and opens its author. `ScreenshotTest` renders the main screens in both themes and `PopupTest` captures every popup; pass `-Proborazzi.test.record=true` to write the images to `app/build/screenshots`.
 
 Toolchain: AGP 9.5, Gradle 9.6, Kotlin 2.4, Compose BOM 2026.09, compile and target SDK 37, min SDK 29.
 

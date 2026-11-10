@@ -68,17 +68,20 @@ object Fixtures {
     val highlights = (0 until 6).map { Highlight("h$it", amara.id, MediaRef.Generated(100L + it * 13), null, ago(60L * 24 * it)) }
 
     val posts = listOf(
-        Post("p1", amara.id, amara.displayName, amara.avatar, "Found this spot by accident. Coming back next week.", MediaRef.Generated(512), ago(95), 42, 3, true),
-        Post("p2", amara.id, amara.displayName, amara.avatar, "Learning to enjoy eating alone at restaurants. It is getting easier.", null, ago(60L * 30), 18, 1, false),
+        Post("p1", amara.id, amara.displayName, amara.avatar, "Found this spot by accident. Coming back next week.", MediaRef.Generated(512), ago(95), 42, 3, true, viewCount = 618, saveCount = 5, shareCount = 2),
+        Post("p2", amara.id, amara.displayName, amara.avatar, "Learning to enjoy eating alone at restaurants. It is getting easier.", null, ago(60L * 30), 18, 1, false, viewCount = 240, saveCount = 1, shareCount = 0),
     )
 
     /** A mixed timeline, newest first, as the feed shows it. */
     val feed = listOf(
-        Post("f1", kai.id, kai.displayName, kai.avatar, "Two rolls back from the lab today. Half of them are of the same pigeon and I regret nothing.", MediaRef.Generated(733), ago(12), 9, 2, false),
-        Post("f2", ines.id, ines.displayName, ines.avatar, "There is a Portuguese word for missing a place you have never been. I think about it every time it rains.", null, ago(48), 31, 6, true),
-        Post("f3", me.id, me.displayName, me.avatar, "First week in a new city. Found a bakery that opens at six, which is now my whole personality.", MediaRef.Generated(281), ago(60L * 3), 14, 4, false),
-        Post("f4", theo.id, theo.displayName, theo.avatar, "Laminated dough at 5am with nobody else around is the closest thing I have to meditation.", null, ago(60L * 9), 57, 8, false),
+        Post("f1", kai.id, kai.displayName, kai.avatar, "Two rolls back from the lab today. Half of them are of the same pigeon and I regret nothing.", MediaRef.Generated(733), ago(12), 9, 2, false, viewCount = 87, saveCount = 1, shareCount = 0),
+        Post("f2", ines.id, ines.displayName, ines.avatar, "There is a Portuguese word for missing a place you have never been. I think about it every time it rains.", null, ago(48), 31, 6, true, viewCount = 1_240, saveCount = 12, shareCount = 4, savedAt = ago(20)),
+        Post("f3", me.id, me.displayName, me.avatar, "First week in a new city. Found a bakery that opens at six, which is now my whole personality.", MediaRef.Generated(281), ago(60L * 3), 14, 4, false, viewCount = 356, saveCount = 2, shareCount = 1),
+        Post("f4", theo.id, theo.displayName, theo.avatar, "Laminated dough at 5am with nobody else around is the closest thing I have to meditation.", null, ago(60L * 9), 57, 8, false, viewCount = 15_320, saveCount = 41, shareCount = 9),
     ) + posts
+
+    /** Your saved list, most recently saved first. */
+    val saved = listOf(feed[1].copy(savedAt = ago(20)), feed[3].copy(savedAt = ago(60L * 2), saveCount = 42), posts[0].copy(savedAt = ago(60L * 26), saveCount = 6))
 
     private fun msg(id: String, mine: Boolean, text: String, minutesAgo: Long, status: DeliveryStatus = DeliveryStatus.Read) =
         Message(id, "c1", if (mine) SELF_ID else amara.id, text, ago(minutesAgo), status)

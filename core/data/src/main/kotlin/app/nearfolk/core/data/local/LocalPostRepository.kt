@@ -6,6 +6,7 @@ import androidx.paging.PagingData
 import androidx.paging.map
 import app.nearfolk.core.common.TimeSource
 import app.nearfolk.core.data.community.CommunitySimulator
+import app.nearfolk.core.data.di.ApplicationScope
 import app.nearfolk.core.data.media.AttachmentCodec
 import app.nearfolk.core.data.media.MediaFiles
 import app.nearfolk.core.data.repository.PostRepository
@@ -22,9 +23,14 @@ import app.nearfolk.core.model.Post
 import app.nearfolk.core.model.ProfileRules
 import app.nearfolk.core.model.SELF_ID
 import androidx.room.withTransaction
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import java.time.Instant
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -35,6 +41,7 @@ internal class LocalPostRepository @Inject constructor(
     private val media: MediaFiles,
     private val simulator: CommunitySimulator,
     private val time: TimeSource,
+    @ApplicationScope private val scope: CoroutineScope,
 ) : PostRepository {
     private val posts = db.postDao()
     private val comments = db.commentDao()
@@ -51,6 +58,47 @@ internal class LocalPostRepository @Inject constructor(
             .map { page -> page.map { it.toModel() } }
 
     override suspend fun refreshFeed() = simulator.refreshFeed()
+
+    override fun saved(): Flow<PagingData<Post>> =
+        Pager(PagingConfig(pageSize = 12, prefetchDistance = 6, enablePlaceholders = false)) { posts.pagingSaved(SELF_ID) }
+            .flow
+            .map { page -> page.map { it.toModel() } }
+
+    override fun savedCount(): Flow<Int> = posts.observeSavedCount(SELF_ID)
+
+    override suspend fun toggleSave(postId: String) = posts.toggleSave(postId, time.now().toEpochMilli())
+
+    override suspend fun setSaved(postId: String, savedAt: Instant?) = posts.setSaved(postId, savedAt?.toEpochMilli())
+
+    private val viewLock = Any()
+    private val viewedThisSession = HashSet<String>()
+    private val pendingViews = LinkedHashSet<String>()
+    private var viewFlush: Job? = null
+
+    override fun recordView(postId: String) {
+        synchronized(viewLock) {
+            if (!viewedThisSession.add(postId)) return
+            pendingViews += postId
+            if (viewFlush != null) return
+            // One write for everything seen in the next moment, so scrolling does not
+            // reload the lists once per post.
+            viewFlush = scope.launch {
+                delay(VIEW_BATCH_MILLIS)
+                flushViews()
+            }
+        }
+    }
+
+    /** Writes the views counted so far. */
+    internal suspend fun flushViews() {
+        val ids = synchronized(viewLock) {
+            viewFlush = null
+            pendingViews.toList().also { pendingViews.clear() }
+        }
+        if (ids.isNotEmpty()) posts.addViews(ids, 1)
+    }
+
+    override suspend fun recordShare(postId: String) = posts.incrementShares(postId)
 
     override fun allPosts(authorId: String): Flow<List<Post>> = posts.observeFor(authorId).map { rows -> rows.map { it.toModel() } }
 
@@ -117,4 +165,8 @@ internal class LocalPostRepository @Inject constructor(
     override fun unseenActivityCount(): Flow<Int> = activity.observeUnseen()
 
     override suspend fun markActivitySeen() = activity.markAllSeen()
+
+    private companion object {
+        const val VIEW_BATCH_MILLIS = 1_500L
+    }
 }

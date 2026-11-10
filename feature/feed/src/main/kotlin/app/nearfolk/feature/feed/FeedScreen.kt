@@ -30,6 +30,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -38,7 +39,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
+import app.nearfolk.core.data.share.PostSharing
 import app.nearfolk.core.designsystem.component.NfButton
 import app.nearfolk.core.designsystem.component.NfButtonSize
 import app.nearfolk.core.designsystem.component.NfButtonStyle
@@ -54,7 +57,12 @@ import app.nearfolk.core.model.Post
 import app.nearfolk.core.model.SELF_ID
 import app.nearfolk.core.ui.AttachmentProblemMessages
 import app.nearfolk.core.ui.CommentsSheet
+import app.nearfolk.core.ui.PostActions
+import app.nearfolk.core.ui.PostContentType
 import app.nearfolk.core.ui.PostItem
+import app.nearfolk.core.ui.PostStatsSheet
+import app.nearfolk.core.ui.TrackPostViews
+import app.nearfolk.core.ui.rememberSavedNotice
 import java.time.Instant
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -71,6 +79,7 @@ object FeedTags {
 fun FeedRouteScreen(
     onOpenMember: (String) -> Unit,
     onNewPost: () -> Unit,
+    onOpenSaved: () -> Unit,
     viewModel: FeedViewModel = hiltViewModel(),
 ) {
     val posts = viewModel.feed.collectAsLazyPagingItems()
@@ -79,15 +88,33 @@ fun FeedRouteScreen(
     val comments by viewModel.comments.collectAsStateWithLifecycle()
     val commentAttachments by viewModel.commentAttachments.collectAsStateWithLifecycle()
     AttachmentProblemMessages(viewModel.attachmentProblems)
+    val context = LocalContext.current
+    val savedNotice = rememberSavedNotice(onOpenSaved)
+    var statsFor by rememberSaveable { mutableStateOf<String?>(null) }
+    val actions = remember(viewModel, context, savedNotice, onOpenMember) {
+        PostActions(
+            onToggleLike = { viewModel.toggleLike(it.id) },
+            onOpenComments = { viewModel.openComments(it.id) },
+            onToggleSave = {
+                viewModel.toggleSave(it.id)
+                savedNotice(it.savedByMe)
+            },
+            onShare = { PostSharing.share(context, it) },
+            onOpenStats = { statsFor = it.id },
+            onOpenAuthor = { onOpenMember(it.authorId) },
+        )
+    }
     FeedScreen(
         posts = posts,
         refreshing = refreshing,
         onRefresh = viewModel::refresh,
-        onToggleLike = viewModel::toggleLike,
-        onOpenComments = viewModel::openComments,
-        onOpenMember = onOpenMember,
+        actions = actions,
+        onViewed = viewModel::recordView,
         onNewPost = onNewPost,
     )
+    statsFor?.let { id ->
+        posts.itemSnapshotList.items.firstOrNull { it.id == id }?.let { PostStatsSheet(it, onDismiss = { statsFor = null }) }
+    }
     if (commentsPostId != null) {
         CommentsSheet(
             comments = comments,
@@ -112,15 +139,15 @@ fun FeedScreen(
     posts: LazyPagingItems<Post>,
     refreshing: Boolean,
     onRefresh: () -> Unit,
-    onToggleLike: (String) -> Unit,
-    onOpenComments: (String) -> Unit,
-    onOpenMember: (String) -> Unit,
+    actions: PostActions,
+    onViewed: (String) -> Unit,
     onNewPost: () -> Unit,
     now: Instant = Instant.now(),
 ) {
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val fresh = rememberFreshPosts(posts, listState)
+    TrackPostViews(listState, onViewed)
 
     Column(Modifier.fillMaxSize().background(Nf.colors.canvas)) {
         NfLargeHeader(stringResource(R.string.feed_title)) {
@@ -145,16 +172,10 @@ fun FeedScreen(
                     contentPadding = PaddingValues(bottom = 24.dp),
                     modifier = Modifier.fillMaxSize().testTag(FeedTags.List),
                 ) {
-                    items(count = posts.itemCount, key = posts.itemKey { it.id }) { index ->
+                    items(count = posts.itemCount, key = posts.itemKey { it.id }, contentType = posts.itemContentType { PostContentType }) { index ->
                         val post = posts[index] ?: return@items
                         Column(Modifier.padding(horizontal = 20.dp)) {
-                            PostItem(
-                                post,
-                                onToggleLike = { onToggleLike(post.id) },
-                                onOpenComments = { onOpenComments(post.id) },
-                                onOpenAuthor = { onOpenMember(post.authorId) },
-                                now = now,
-                            )
+                            PostItem(post, actions, now = now)
                             NfDivider()
                         }
                     }

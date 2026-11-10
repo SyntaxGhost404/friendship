@@ -14,7 +14,10 @@ import app.nearfolk.core.data.media.MediaKind
 import app.nearfolk.core.data.media.PlaybackState
 import app.nearfolk.core.data.media.VoicePlayer
 import app.nearfolk.core.data.media.VoiceRecorder
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
 import app.nearfolk.core.data.repository.AddHighlightResult
+import app.nearfolk.core.data.repository.CommentThreadFactory
 import app.nearfolk.core.data.repository.MemberRepository
 import app.nearfolk.core.data.repository.PasscodeRepository
 import app.nearfolk.core.data.repository.PlusRepository
@@ -22,6 +25,9 @@ import app.nearfolk.core.data.repository.PostRepository
 import app.nearfolk.core.data.repository.PostStats
 import app.nearfolk.core.data.repository.ProfileRepository
 import app.nearfolk.core.model.ActivityItem
+import app.nearfolk.core.model.Comment
+import app.nearfolk.core.model.DraftAttachment
+import app.nearfolk.core.model.MediaSource
 import app.nearfolk.core.model.Gender
 import app.nearfolk.core.model.Highlight
 import app.nearfolk.core.model.IdentityUpdate
@@ -58,6 +64,7 @@ data class YouUiState(
     val unseenActivity: Int = 0,
     val isPlus: Boolean = false,
     val passcodeSet: Boolean = false,
+    val savedCount: Int = 0,
 )
 
 @HiltViewModel
@@ -68,13 +75,12 @@ class YouViewModel @Inject constructor(
     passcode: PasscodeRepository,
 ) : ViewModel() {
     val state: StateFlow<YouUiState> = combine(
-        profile.me,
-        posts.stats(SELF_ID),
-        posts.unseenActivityCount(),
+        combine(profile.me, posts.stats(SELF_ID), posts.unseenActivityCount(), ::Triple),
         plus.status,
         passcode.isSet,
-    ) { me, stats, unseen, plusStatus, passcodeSet ->
-        YouUiState(me, stats, unseen, plusStatus.active, passcodeSet)
+        posts.savedCount(),
+    ) { (me, stats, unseen), plusStatus, passcodeSet, saved ->
+        YouUiState(me, stats, unseen, plusStatus.active, passcodeSet, saved)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), YouUiState())
 }
 
@@ -295,10 +301,38 @@ class VoiceIntroViewModel @Inject constructor(
 }
 
 @HiltViewModel
-class MyPostsViewModel @Inject constructor(private val repository: PostRepository) : ViewModel() {
+class MyPostsViewModel @Inject constructor(
+    private val repository: PostRepository,
+    threads: CommentThreadFactory,
+) : ViewModel() {
     val posts: StateFlow<List<Post>?> = repository.allPosts(SELF_ID).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
     fun delete(id: String) = viewModelScope.launch { repository.deletePost(id) }
     fun toggleLike(id: String) = viewModelScope.launch { repository.toggleLike(id) }
+    fun toggleSave(id: String) = viewModelScope.launch { repository.toggleSave(id) }
+    fun recordView(id: String) = repository.recordView(id)
+
+    private val thread = threads.create(viewModelScope)
+    val commentsPostId: StateFlow<String?> = thread.postId
+    val comments: StateFlow<List<Comment>> = thread.comments
+    val commentText = TextFieldState()
+    val commentAttachments: StateFlow<List<DraftAttachment>> = thread.attachments
+    val attachmentProblems = thread.problems
+
+    fun openComments(postId: String?) {
+        if (thread.open(postId)) commentText.clearText()
+    }
+
+    fun addCommentMedia(sources: List<MediaSource>) = thread.addMedia(sources)
+
+    fun removeCommentAttachment(id: String) = thread.removeAttachment(id)
+
+    fun sendComment() {
+        if (thread.send(commentText.text.toString())) commentText.clearText()
+    }
+
+    override fun onCleared() {
+        thread.discard()
+    }
 }
 
 @HiltViewModel

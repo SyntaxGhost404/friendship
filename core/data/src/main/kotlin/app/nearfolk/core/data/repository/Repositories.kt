@@ -26,6 +26,7 @@ import app.nearfolk.core.model.UserPreferences
 import app.nearfolk.core.model.Visibility
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import java.time.Instant
 
 /*
  * Repository contracts. Screens depend only on these interfaces. The current
@@ -96,6 +97,25 @@ interface PostRepository {
 
     /** Asks for posts published since the last look. They arrive through [feed]. */
     suspend fun refreshFeed()
+
+    /** Posts you saved, the most recently saved first. Only you see this list. */
+    fun saved(): Flow<PagingData<Post>>
+    fun savedCount(): Flow<Int>
+
+    /** Adds the post to your saved list, or takes it out if it is already there. */
+    suspend fun toggleSave(postId: String)
+
+    /** Puts the post back in your saved list at [savedAt], or removes it when that is null. Used for undo. */
+    suspend fun setSaved(postId: String, savedAt: Instant?)
+
+    /**
+     * Counts one view of the post. A post counts once per app session however
+     * often it scrolls past, and views are written in small batches.
+     */
+    fun recordView(postId: String)
+
+    /** Called after you picked an app in the share sheet. */
+    suspend fun recordShare(postId: String)
     fun allPosts(authorId: String): Flow<List<Post>>
     fun post(id: String): Flow<Post?>
     fun comments(postId: String): Flow<List<Comment>>

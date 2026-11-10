@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -41,6 +42,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -74,7 +76,15 @@ import app.nearfolk.core.model.ProfileRules
 import app.nearfolk.core.ui.LocalSnackbarHost
 import app.nearfolk.core.ui.MediaImage
 import app.nearfolk.core.ui.MemberAvatar
+import app.nearfolk.core.ui.AttachmentProblemMessages
+import app.nearfolk.core.ui.CommentsSheet
+import app.nearfolk.core.ui.PostActions
+import app.nearfolk.core.ui.PostContentType
 import app.nearfolk.core.ui.PostItem
+import app.nearfolk.core.ui.PostStatsSheet
+import app.nearfolk.core.ui.TrackPostViews
+import app.nearfolk.core.ui.rememberSavedNotice
+import app.nearfolk.core.data.share.PostSharing
 import app.nearfolk.core.ui.rememberTimeFormat
 import coil3.compose.AsyncImage
 import kotlinx.coroutines.launch
@@ -83,15 +93,35 @@ import kotlinx.coroutines.launch
 fun MyPostsRouteScreen(
     onBack: () -> Unit,
     onNewPost: () -> Unit,
-    onOpenComments: () -> Unit,
+    onOpenSaved: () -> Unit,
     viewModel: MyPostsViewModel = hiltViewModel(),
 ) {
     val posts by viewModel.posts.collectAsStateWithLifecycle()
+    val commentsPostId by viewModel.commentsPostId.collectAsStateWithLifecycle()
+    val comments by viewModel.comments.collectAsStateWithLifecycle()
+    val commentAttachments by viewModel.commentAttachments.collectAsStateWithLifecycle()
+    AttachmentProblemMessages(viewModel.attachmentProblems)
     var deleting by rememberSaveable { mutableStateOf<String?>(null) }
+    var statsFor by rememberSaveable { mutableStateOf<String?>(null) }
     val snackbar = LocalSnackbarHost.current
     val context = LocalContext.current
     val resources = LocalResources.current
     val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val savedNotice = rememberSavedNotice(onOpenSaved)
+    val actions = remember(viewModel, context, savedNotice) {
+        PostActions(
+            onToggleLike = { viewModel.toggleLike(it.id) },
+            onOpenComments = { viewModel.openComments(it.id) },
+            onToggleSave = {
+                viewModel.toggleSave(it.id)
+                savedNotice(it.savedByMe)
+            },
+            onShare = { PostSharing.share(context, it) },
+            onOpenStats = { statsFor = it.id },
+        )
+    }
+    val listState = rememberLazyListState()
+    TrackPostViews(listState, viewModel::recordView)
     Column(Modifier.fillMaxSize().background(Nf.colors.canvas)) {
         NfTopBar(
             stringResource(R.string.posts_title),
@@ -108,15 +138,10 @@ fun MyPostsRouteScreen(
                 stringResource(R.string.posts_empty_body),
                 action = { NfButton(stringResource(R.string.compose_title), onNewPost, size = NfButtonSize.Medium) },
             )
-            else -> LazyColumn(contentPadding = PaddingValues(horizontal = 20.dp, vertical = 4.dp)) {
-                items(list, key = { it.id }) { post ->
+            else -> LazyColumn(state = listState, contentPadding = PaddingValues(horizontal = 20.dp, vertical = 4.dp)) {
+                items(list, key = { it.id }, contentType = { PostContentType }) { post ->
                     Column(Modifier.animateItem()) {
-                        PostItem(
-                            post,
-                            onToggleLike = { viewModel.toggleLike(post.id) },
-                            onOpenComments = onOpenComments,
-                            onOptions = { deleting = post.id },
-                        )
+                        PostItem(post, actions, onOptions = { deleting = post.id })
                         NfDivider()
                     }
                 }
@@ -138,6 +163,18 @@ fun MyPostsRouteScreen(
             destructive = true,
         )
     }
+    if (commentsPostId != null) {
+        CommentsSheet(
+            comments = comments,
+            text = viewModel.commentText,
+            attachments = commentAttachments,
+            onAddMedia = viewModel::addCommentMedia,
+            onRemoveAttachment = viewModel::removeCommentAttachment,
+            onDismiss = { viewModel.openComments(null) },
+            onSend = viewModel::sendComment,
+        )
+    }
+    statsFor?.let { id -> posts?.firstOrNull { it.id == id }?.let { PostStatsSheet(it, onDismiss = { statsFor = null }) } }
 }
 
 @Composable

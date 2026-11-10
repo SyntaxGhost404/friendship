@@ -70,6 +70,10 @@ internal fun PostRow.toModel() = Post(
     likeCount = likeCount,
     commentCount = commentCount,
     likedByMe = likedByMe,
+    viewCount = viewCount,
+    saveCount = saveCount,
+    shareCount = shareCount,
+    savedAt = savedAt?.let(Instant::ofEpochMilli),
 )
 
 internal fun CommentRow.toModel() = Comment(
