@@ -206,6 +206,9 @@ interface PostDao {
     @Query("UPDATE posts SET commentCount = commentCount + 1 WHERE id = :id")
     suspend fun incrementComments(id: String)
 
+    @Query("UPDATE posts SET commentCount = commentCount + :count WHERE id = :id")
+    suspend fun addComments(id: String, count: Int)
+
     @Query("DELETE FROM posts WHERE id = :id")
     suspend fun delete(id: String)
 
@@ -215,14 +218,79 @@ interface PostDao {
 
 @Dao
 interface CommentDao {
+    /**
+     * Top-level comments of a post, oldest first, each with the number of
+     * replies under it. Comments and replies by members you blocked are left out.
+     */
     @Query(
         """
-        SELECT c.*, m.displayName AS authorName, m.avatar AS authorAvatar
-        FROM comments c JOIN members m ON m.id = c.authorId
-        WHERE c.postId = :postId ORDER BY c.createdAt ASC
+        SELECT c.*, m.displayName AS authorName, m.avatar AS authorAvatar, mt.displayName AS replyToName,
+            (SELECT COUNT(*) FROM comments r
+                WHERE r.parentId = c.id AND r.authorId NOT IN (SELECT memberId FROM blocks)) AS replyCount
+        FROM comments c
+        JOIN members m ON m.id = c.authorId
+        LEFT JOIN members mt ON mt.id = c.replyToId
+        WHERE c.postId = :postId AND c.parentId IS NULL AND c.authorId NOT IN (SELECT memberId FROM blocks)
+        ORDER BY c.createdAt ASC, c.id ASC
         """,
     )
-    fun observe(postId: String): Flow<List<CommentRow>>
+    fun observeTopLevel(postId: String): Flow<List<CommentRow>>
+
+    /** The replies under one top-level comment, oldest first. */
+    @Query(
+        """
+        SELECT c.*, m.displayName AS authorName, m.avatar AS authorAvatar, mt.displayName AS replyToName, 0 AS replyCount
+        FROM comments c
+        JOIN members m ON m.id = c.authorId
+        LEFT JOIN members mt ON mt.id = c.replyToId
+        WHERE c.parentId = :parentId AND c.authorId NOT IN (SELECT memberId FROM blocks)
+        ORDER BY c.createdAt ASC, c.id ASC
+        """,
+    )
+    fun observeReplies(parentId: String): Flow<List<CommentRow>>
+
+    @Query(
+        """
+        SELECT c.*, m.displayName AS authorName, m.avatar AS authorAvatar, mt.displayName AS replyToName,
+            (SELECT COUNT(*) FROM comments r
+                WHERE r.parentId = c.id AND r.authorId NOT IN (SELECT memberId FROM blocks)) AS replyCount
+        FROM comments c
+        JOIN members m ON m.id = c.authorId
+        LEFT JOIN members mt ON mt.id = c.replyToId
+        WHERE c.id = :id AND c.authorId NOT IN (SELECT memberId FROM blocks)
+        """,
+    )
+    fun observeOne(id: String): Flow<CommentRow?>
+
+    @Query("SELECT * FROM comments WHERE id = :id")
+    suspend fun get(id: String): CommentEntity?
+
+    /**
+     * Gives your [vote] (1 or -1), or takes it back when you already gave that
+     * vote. The score moves by the difference, so switching from a like to a
+     * dislike takes two off.
+     */
+    @Query(
+        """
+        UPDATE comments SET
+            score = score - myVote + (CASE WHEN myVote = :vote THEN 0 ELSE :vote END),
+            myVote = CASE WHEN myVote = :vote THEN 0 ELSE :vote END
+        WHERE id = :id
+        """,
+    )
+    suspend fun vote(id: String, vote: Int)
+
+    /** Votes from other people. */
+    @Query("UPDATE comments SET score = score + :delta WHERE id = :id")
+    suspend fun addScore(id: String, delta: Int)
+
+    /** Top-level comments written by others, for the sample community's threads. */
+    @Query("SELECT * FROM comments WHERE parentId IS NULL AND authorId != :selfId")
+    suspend fun topLevelByOthers(selfId: String): List<CommentEntity>
+
+    /** Gives comments by others that nobody voted on yet a starting score. */
+    @Query("UPDATE comments SET score = abs(random()) % 15 WHERE authorId != :selfId AND score = 0 AND myVote = 0")
+    suspend fun seedScores(selfId: String)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(comments: List<CommentEntity>)

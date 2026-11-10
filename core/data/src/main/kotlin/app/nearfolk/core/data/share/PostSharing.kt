@@ -8,6 +8,7 @@ import android.content.Intent
 import app.nearfolk.core.data.R
 import app.nearfolk.core.data.di.ApplicationScope
 import app.nearfolk.core.data.repository.PostRepository
+import app.nearfolk.core.model.Comment
 import app.nearfolk.core.model.Post
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -29,6 +30,19 @@ object PostSharing {
             context.startActivity(chooser(context, post))
         } catch (_: ActivityNotFoundException) {
             // The system share sheet is always there; nothing to do if a device has none.
+        }
+    }
+
+    /** Opens the share sheet for a comment. Comments have no share count, so there is no callback. */
+    fun shareComment(context: Context, comment: Comment) {
+        val appName = context.applicationInfo.loadLabel(context.packageManager).toString()
+        val send = Intent(Intent.ACTION_SEND)
+            .setType("text/plain")
+            .putExtra(Intent.EXTRA_TEXT, context.getString(R.string.data_share_text, comment.authorName, appName, comment.text))
+        try {
+            context.startActivity(Intent.createChooser(send, context.getString(R.string.data_share_comment_title)))
+        } catch (_: ActivityNotFoundException) {
+            // As with posts: nothing to do without a share sheet.
         }
     }
 

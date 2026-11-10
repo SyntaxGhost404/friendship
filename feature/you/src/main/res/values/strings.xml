@@ -22,7 +22,7 @@
     <string name="you_highlights">Highlights</string>
     <string name="you_highlights_body">%1$d of %2$d photos picked</string>
     <string name="you_activity">Activity</string>
-    <string name="you_activity_body">Likes and comments on your posts</string>
+    <string name="you_activity_body">Likes, comments and replies</string>
     <string name="you_voice">Voice intro</string>
     <string name="you_voice_none">Not recorded yet</string>
     <string name="you_voice_length">%1$s long</string>
@@ -119,9 +119,10 @@
 
     <string name="activity_title">Activity</string>
     <string name="activity_empty_title">Nothing yet</string>
-    <string name="activity_empty_body">When people like or comment on your posts, you’ll see it here.</string>
+    <string name="activity_empty_body">When people like or comment on your posts, or reply to your comments, you’ll see it here.</string>
     <string name="activity_liked">%1$s liked your post</string>
     <string name="activity_commented">%1$s commented: %2$s</string>
+    <string name="activity_replied">%1$s replied: %2$s</string>
     <plurals name="highlights_limit">
         <item quantity="one">You’ve reached %1$d highlight. Remove one or get Plus for more.</item>
         <item quantity="other">You’ve reached %1$d highlights. Remove one or get Plus for more.</item>

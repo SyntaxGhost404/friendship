@@ -29,6 +29,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.Reply
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.AddPhotoAlternate
 import androidx.compose.material.icons.rounded.ChatBubble
@@ -76,7 +77,6 @@ import app.nearfolk.core.model.ProfileRules
 import app.nearfolk.core.ui.LocalSnackbarHost
 import app.nearfolk.core.ui.MediaImage
 import app.nearfolk.core.ui.MemberAvatar
-import app.nearfolk.core.ui.AttachmentProblemMessages
 import app.nearfolk.core.ui.CommentsSheet
 import app.nearfolk.core.ui.PostActions
 import app.nearfolk.core.ui.PostContentType
@@ -94,13 +94,13 @@ fun MyPostsRouteScreen(
     onBack: () -> Unit,
     onNewPost: () -> Unit,
     onOpenSaved: () -> Unit,
+    onOpenMember: (String) -> Unit,
     viewModel: MyPostsViewModel = hiltViewModel(),
 ) {
     val posts by viewModel.posts.collectAsStateWithLifecycle()
-    val commentsPostId by viewModel.commentsPostId.collectAsStateWithLifecycle()
-    val comments by viewModel.comments.collectAsStateWithLifecycle()
-    val commentAttachments by viewModel.commentAttachments.collectAsStateWithLifecycle()
-    AttachmentProblemMessages(viewModel.attachmentProblems)
+    val commentsState by viewModel.commentsState.collectAsStateWithLifecycle()
+    // Hidden while this screen hands over to a profile. Back here, the sheet returns as it was.
+    var leavingForProfile by remember { mutableStateOf(false) }
     var deleting by rememberSaveable { mutableStateOf<String?>(null) }
     var statsFor by rememberSaveable { mutableStateOf<String?>(null) }
     val snackbar = LocalSnackbarHost.current
@@ -163,15 +163,15 @@ fun MyPostsRouteScreen(
             destructive = true,
         )
     }
-    if (commentsPostId != null) {
+    if (commentsState.postId != null && !leavingForProfile) {
         CommentsSheet(
-            comments = comments,
-            text = viewModel.commentText,
-            attachments = commentAttachments,
-            onAddMedia = viewModel::addCommentMedia,
-            onRemoveAttachment = viewModel::removeCommentAttachment,
-            onDismiss = { viewModel.openComments(null) },
-            onSend = viewModel::sendComment,
+            state = commentsState,
+            host = viewModel,
+            onShare = { PostSharing.shareComment(context, it) },
+            onOpenProfile = { memberId ->
+                leavingForProfile = true
+                onOpenMember(memberId)
+            },
         )
     }
     statsFor?.let { id -> posts?.firstOrNull { it.id == id }?.let { PostStatsSheet(it, onDismiss = { statsFor = null }) } }
@@ -385,7 +385,11 @@ fun ActivityRouteScreen(onBack: () -> Unit, onOpenMember: (String) -> Unit, view
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Icon(
-                                    if (item.kind == ActivityKind.Like) Icons.Rounded.Favorite else Icons.Rounded.ChatBubble,
+                                    when (item.kind) {
+                                        ActivityKind.Like -> Icons.Rounded.Favorite
+                                        ActivityKind.Comment -> Icons.Rounded.ChatBubble
+                                        ActivityKind.Reply -> Icons.AutoMirrored.Rounded.Reply
+                                    },
                                     null,
                                     tint = if (item.kind == ActivityKind.Like) Nf.colors.onDanger else Nf.colors.onInk,
                                     modifier = Modifier.size(10.dp),
@@ -394,10 +398,10 @@ fun ActivityRouteScreen(onBack: () -> Unit, onOpenMember: (String) -> Unit, view
                         }
                         Column(Modifier.weight(1f)) {
                             Text(
-                                if (item.kind == ActivityKind.Like) {
-                                    stringResource(R.string.activity_liked, item.actorName)
-                                } else {
-                                    stringResource(R.string.activity_commented, item.actorName, item.commentText.orEmpty())
+                                when (item.kind) {
+                                    ActivityKind.Like -> stringResource(R.string.activity_liked, item.actorName)
+                                    ActivityKind.Comment -> stringResource(R.string.activity_commented, item.actorName, item.commentText.orEmpty())
+                                    ActivityKind.Reply -> stringResource(R.string.activity_replied, item.actorName, item.commentText.orEmpty())
                                 },
                                 style = if (item.seen) Nf.type.body else Nf.type.bodyStrong,
                                 color = Nf.colors.textPrimary,

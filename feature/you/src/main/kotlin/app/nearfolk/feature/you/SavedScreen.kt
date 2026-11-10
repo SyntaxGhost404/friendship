@@ -42,7 +42,6 @@ import app.nearfolk.core.designsystem.component.NfSpinner
 import app.nearfolk.core.designsystem.component.NfTopBar
 import app.nearfolk.core.designsystem.theme.Nf
 import app.nearfolk.core.model.Post
-import app.nearfolk.core.ui.AttachmentProblemMessages
 import app.nearfolk.core.ui.CommentsSheet
 import app.nearfolk.core.ui.LocalSnackbarHost
 import app.nearfolk.core.ui.PostActions
@@ -67,10 +66,9 @@ fun SavedPostsRouteScreen(
 ) {
     val posts = viewModel.saved.collectAsLazyPagingItems()
     val count by viewModel.count.collectAsStateWithLifecycle()
-    val commentsPostId by viewModel.commentsPostId.collectAsStateWithLifecycle()
-    val comments by viewModel.comments.collectAsStateWithLifecycle()
-    val commentAttachments by viewModel.commentAttachments.collectAsStateWithLifecycle()
-    AttachmentProblemMessages(viewModel.attachmentProblems)
+    val commentsState by viewModel.commentsState.collectAsStateWithLifecycle()
+    // Hidden while this screen hands over to a profile. Back here, the sheet returns as it was.
+    var leavingForProfile by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val snackbar = LocalSnackbarHost.current
     val resources = LocalResources.current
@@ -111,15 +109,15 @@ fun SavedPostsRouteScreen(
         onBack = onBack,
         onOpenFeed = onOpenFeed,
     )
-    if (commentsPostId != null) {
+    if (commentsState.postId != null && !leavingForProfile) {
         CommentsSheet(
-            comments = comments,
-            text = viewModel.commentText,
-            attachments = commentAttachments,
-            onAddMedia = viewModel::addCommentMedia,
-            onRemoveAttachment = viewModel::removeCommentAttachment,
-            onDismiss = { viewModel.openComments(null) },
-            onSend = viewModel::sendComment,
+            state = commentsState,
+            host = viewModel,
+            onShare = { PostSharing.shareComment(context, it) },
+            onOpenProfile = { memberId ->
+                leavingForProfile = true
+                onOpenMember(memberId)
+            },
         )
     }
     statsFor?.let { id ->

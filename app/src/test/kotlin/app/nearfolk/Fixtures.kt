@@ -15,6 +15,8 @@ import app.nearfolk.core.model.Message
 import app.nearfolk.core.model.Post
 import app.nearfolk.core.model.Presence
 import app.nearfolk.core.model.SELF_ID
+import app.nearfolk.core.model.Comment
+import app.nearfolk.core.model.Vote
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
@@ -82,6 +84,20 @@ object Fixtures {
 
     /** Your saved list, most recently saved first. */
     val saved = listOf(feed[1].copy(savedAt = ago(20)), feed[3].copy(savedAt = ago(60L * 2), saveCount = 42), posts[0].copy(savedAt = ago(60L * 26), saveCount = 6))
+
+    /** A comment sheet's threads: scores, a negative one, replies and a reply that names someone. */
+    val comments = listOf(
+        Comment("c1", "p1", ines.id, ines.displayName, ines.avatar, "Saudade, right? I feel it every time I leave Lisbon.", ago(40), score = 24, replyCount = 3),
+        Comment("c2", "p1", amara.id, amara.displayName, amara.avatar, "This is the kind of post I come here for.", ago(35), score = 9, myVote = Vote.Up, replyCount = 1),
+        Comment("c3", "p1", theo.id, theo.displayName, theo.avatar, "Rain makes everything better. Bread too.", ago(20), score = -2),
+        Comment("c4", "p1", me.id, me.displayName, me.avatar, "Saving this word for later.", ago(5), score = 1),
+    )
+
+    val replies = listOf(
+        Comment("r1", "p1", kai.id, kai.displayName, kai.avatar, "Same with Osaka for me.", ago(38), parentId = "c1", score = 4),
+        Comment("r2", "p1", theo.id, theo.displayName, theo.avatar, "Lyon in autumn does it to me.", ago(30), parentId = "c1", score = 2),
+        Comment("r3", "p1", me.id, me.displayName, me.avatar, "Now I want to visit both.", ago(12), parentId = "c1", replyToId = kai.id, replyToName = kai.displayName, score = 1, myVote = Vote.Up),
+    )
 
     private fun msg(id: String, mine: Boolean, text: String, minutesAgo: Long, status: DeliveryStatus = DeliveryStatus.Read) =
         Message(id, "c1", if (mine) SELF_ID else amara.id, text, ago(minutesAgo), status)

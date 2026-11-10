@@ -13,6 +13,7 @@ import app.nearfolk.core.database.entity.MemberEntity
 import app.nearfolk.core.database.entity.PostEntity
 import app.nearfolk.core.datastore.NearfolkPreferences
 import app.nearfolk.core.model.MediaRef
+import app.nearfolk.core.model.SELF_ID
 import app.nearfolk.core.model.Visibility
 import java.time.Duration
 import java.time.LocalDate
@@ -34,10 +35,57 @@ internal class CommunitySeeder @Inject constructor(
     private val prefs: NearfolkPreferences,
     private val time: TimeSource,
 ) {
+    /**
+     * Seeds in steps, so an existing install only gets what it is missing:
+     * 1 is the community itself, 2 adds reply threads and comment scores.
+     */
     suspend fun seedIfNeeded() {
-        if (prefs.seededVersion() >= VERSION && members.count() > 1) return
-        seed()
+        val fresh = prefs.seededVersion() < 1 || members.count() <= 1
+        if (!fresh && prefs.seededVersion() >= VERSION) return
+        if (fresh) seed()
+        seedThreads()
         prefs.setSeededVersion(VERSION)
+    }
+
+    /**
+     * Gives the sample comments a score and some of them a thread of replies.
+     * Reply ids are derived from the comment, so running it again replaces
+     * rows instead of adding more.
+     */
+    private suspend fun seedThreads() {
+        val now = time.now().toEpochMilli()
+        val roots = comments.topLevelByOthers(SELF_ID).filter { SEEDED_COMMENT.matches(it.id) }
+        val replies = mutableListOf<CommentEntity>()
+        val addedPerPost = mutableMapOf<String, Int>()
+        roots.forEach { root ->
+            val rng = Random(root.id.hashCode().toLong())
+            if (rng.nextFloat() >= 0.4f) return@forEach
+            val count = 1 + rng.nextInt(4)
+            var at = root.createdAt
+            var previous = root.authorId
+            repeat(count) { k ->
+                val pick = rng.nextInt(SeedContent.people.size)
+                val author = memberId(pick).takeIf { it != previous } ?: memberId((pick + 1) % SeedContent.people.size)
+                at = minOf(at + rng.nextLong(2 * 60_000L, 6 * 60 * 60_000L), now - 60_000L)
+                // Some replies answer the reply before them and name its author.
+                val mention = if (k > 0 && rng.nextBoolean() && previous != author) previous else null
+                replies += CommentEntity(
+                    id = "${root.id}-r$k",
+                    postId = root.postId,
+                    authorId = author,
+                    text = SeedContent.replies[rng.nextInt(SeedContent.replies.size)],
+                    createdAt = maxOf(at, root.createdAt + 1),
+                    parentId = root.id,
+                    replyToId = mention,
+                    score = rng.nextInt(7),
+                )
+                previous = author
+            }
+            addedPerPost[root.postId] = (addedPerPost[root.postId] ?: 0) + count
+        }
+        comments.insertAll(replies)
+        addedPerPost.forEach { (postId, count) -> posts.addComments(postId, count) }
+        comments.seedScores(SELF_ID)
     }
 
     private suspend fun seed() {
@@ -99,8 +147,8 @@ internal class CommunitySeeder @Inject constructor(
                         postId = postId,
                         authorId = memberId(author),
                         text = SeedContent.comments[rng.nextInt(SeedContent.comments.size)],
-                        // Never in the future: a recent post only has the minutes since it went up.
-                        createdAt = minOf(createdAt + rng.nextLong(60_000L, day), now - 60_000L),
+                        // Spread over the time since the post went up, at most a day, never in the future.
+                        createdAt = createdAt + rng.nextLong(60_000L, maxOf(120_000L, minOf(day, now - createdAt - 60_000L))),
                     )
                 }
                 val likes = rng.nextInt(140)
@@ -145,7 +193,8 @@ internal class CommunitySeeder @Inject constructor(
     }
 
     companion object {
-        const val VERSION = 1
+        const val VERSION = 2
+        private val SEEDED_COMMENT = Regex("m\\d{3}-p\\d+-c\\d+")
         fun memberId(index: Int) = "m%03d".format(index)
     }
 }

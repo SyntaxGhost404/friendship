@@ -85,6 +85,26 @@
     <string name="ui_stats_private">Only totals are shown. Who saved or shared a post stays private.</string>
     <string name="ui_comments_empty">No comments yet. Say something nice.</string>
     <string name="ui_comment_hint">Add a comment</string>
+    <string name="ui_reply_hint">Add a reply</string>
+    <string name="ui_replies_title">Replies</string>
+    <string name="ui_replies_back">Back to comments</string>
+    <string name="ui_replies_empty">No replies yet. Be the first to answer.</string>
+    <plurals name="ui_comment_replies">
+        <item quantity="one">%1$d reply</item>
+        <item quantity="other">%1$d replies</item>
+    </plurals>
+    <string name="ui_comment_like">Like comment</string>
+    <string name="ui_comment_unlike">Remove your like</string>
+    <string name="ui_comment_dislike">Dislike comment</string>
+    <string name="ui_comment_undislike">Remove your dislike</string>
+    <string name="ui_comment_reply">Reply</string>
+    <string name="ui_comment_share">Share comment</string>
+    <string name="ui_comment_score">Score %1$s</string>
+    <string name="ui_comment_author_tag">Author</string>
+    <string name="ui_replying_to">Replying to %1$s</string>
+    <string name="ui_replying_to_clear">Stop replying to %1$s</string>
+    <string name="ui_sort_top">Top</string>
+    <string name="ui_sort_newest">Newest</string>
     <string name="ui_open_profile">Open profile</string>
     <string name="ui_post_options">Post options</string>
     <string name="ui_streak_days">days solo</string>

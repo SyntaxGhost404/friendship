@@ -5,11 +5,13 @@ import app.nearfolk.core.data.local.LocalJournalRepository
 import app.nearfolk.core.data.local.LocalMemberRepository
 import app.nearfolk.core.data.local.LocalPasscodeRepository
 import app.nearfolk.core.data.local.LocalPlusRepository
+import app.nearfolk.core.data.local.LocalCommentRepository
 import app.nearfolk.core.data.local.LocalPostRepository
 import app.nearfolk.core.data.local.LocalPreferencesRepository
 import app.nearfolk.core.data.local.LocalProfileRepository
 import app.nearfolk.core.data.local.LocalSessionRepository
 import app.nearfolk.core.data.repository.ChatRepository
+import app.nearfolk.core.data.repository.CommentRepository
 import app.nearfolk.core.data.repository.JournalRepository
 import app.nearfolk.core.data.repository.MemberRepository
 import app.nearfolk.core.data.repository.PasscodeRepository
@@ -31,6 +33,7 @@ internal abstract class DataModule {
     @Binds abstract fun members(impl: LocalMemberRepository): MemberRepository
     @Binds abstract fun profile(impl: LocalProfileRepository): ProfileRepository
     @Binds abstract fun posts(impl: LocalPostRepository): PostRepository
+    @Binds abstract fun comments(impl: LocalCommentRepository): CommentRepository
     @Binds abstract fun chat(impl: LocalChatRepository): ChatRepository
     @Binds abstract fun journal(impl: LocalJournalRepository): JournalRepository
     @Binds abstract fun passcode(impl: LocalPasscodeRepository): PasscodeRepository

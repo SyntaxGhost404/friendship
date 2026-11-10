@@ -86,6 +86,8 @@ fun NfBottomSheet(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     title: String? = null,
+    /** What screen readers announce for the sheet. Set it when the content draws its own heading. */
+    paneTitle: String? = title,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val scope = rememberCoroutineScope()
@@ -127,7 +129,7 @@ fun NfBottomSheet(
                         .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
                         .semantics {
                             isTraversalGroup = true
-                            if (title != null) paneTitle = title
+                            if (paneTitle != null) this.paneTitle = paneTitle
                             dismiss {
                                 motion.hide()
                                 true

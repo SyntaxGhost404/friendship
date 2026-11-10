@@ -55,15 +55,23 @@ data class PostEntity(
     val savedAt: Long? = null,
 )
 
-@Entity(tableName = "comments", indices = [Index("postId")])
+@Entity(tableName = "comments", indices = [Index("postId"), Index("parentId")])
 data class CommentEntity(
     @PrimaryKey val id: String,
     val postId: String,
     val authorId: String,
     val text: String,
     val createdAt: Long,
-    /** JSON list of attachments, see AttachmentCodec in core:data. */
+    /** JSON list of attachments, see AttachmentCodec in core:data. New comments are text only. */
     @ColumnInfo(defaultValue = "[]") val attachments: String = "[]",
+    /** The top-level comment a reply sits under. Replies never nest deeper. */
+    val parentId: String? = null,
+    /** The member a reply answers by name. */
+    val replyToId: String? = null,
+    /** Likes minus dislikes, your own vote included. */
+    @ColumnInfo(defaultValue = "0") val score: Int = 0,
+    /** Your vote: 1, 0 or -1. */
+    @ColumnInfo(defaultValue = "0") val myVote: Int = 0,
 )
 
 @Entity(tableName = "conversations", indices = [Index(value = ["peerId"], unique = true), Index("lastActivityAt")])
@@ -160,8 +168,14 @@ data class CommentRow(
     val text: String,
     val createdAt: Long,
     val attachments: String,
+    val parentId: String?,
+    val replyToId: String?,
+    val score: Int,
+    val myVote: Int,
     val authorName: String,
     val authorAvatar: String?,
+    val replyToName: String?,
+    val replyCount: Int,
 )
 
 data class ActivityRow(

@@ -26,8 +26,6 @@ import app.nearfolk.core.data.repository.PostStats
 import app.nearfolk.core.data.repository.ProfileRepository
 import app.nearfolk.core.model.ActivityItem
 import app.nearfolk.core.model.Comment
-import app.nearfolk.core.model.DraftAttachment
-import app.nearfolk.core.model.MediaSource
 import app.nearfolk.core.model.Gender
 import app.nearfolk.core.model.Highlight
 import app.nearfolk.core.model.IdentityUpdate
@@ -57,6 +55,10 @@ import java.time.LocalDate
 import java.time.Period
 import javax.inject.Inject
 import kotlin.math.roundToInt
+import app.nearfolk.core.model.CommentSort
+import app.nearfolk.core.model.CommentsState
+import app.nearfolk.core.model.Vote
+import app.nearfolk.core.ui.CommentsHost
 
 data class YouUiState(
     val me: Member? = null,
@@ -304,7 +306,7 @@ class VoiceIntroViewModel @Inject constructor(
 class MyPostsViewModel @Inject constructor(
     private val repository: PostRepository,
     threads: CommentThreadFactory,
-) : ViewModel() {
+) : ViewModel(), CommentsHost {
     val posts: StateFlow<List<Post>?> = repository.allPosts(SELF_ID).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
     fun delete(id: String) = viewModelScope.launch { repository.deletePost(id) }
     fun toggleLike(id: String) = viewModelScope.launch { repository.toggleLike(id) }
@@ -312,26 +314,39 @@ class MyPostsViewModel @Inject constructor(
     fun recordView(id: String) = repository.recordView(id)
 
     private val thread = threads.create(viewModelScope)
-    val commentsPostId: StateFlow<String?> = thread.postId
-    val comments: StateFlow<List<Comment>> = thread.comments
-    val commentText = TextFieldState()
-    val commentAttachments: StateFlow<List<DraftAttachment>> = thread.attachments
-    val attachmentProblems = thread.problems
+    val commentsState: StateFlow<CommentsState> = thread.state
+    override val commentText = TextFieldState()
+    override val replyText = TextFieldState()
 
-    fun openComments(postId: String?) {
-        if (thread.open(postId)) commentText.clearText()
+    override fun openComments(postId: String?) {
+        if (thread.open(postId)) {
+            commentText.clearText()
+            replyText.clearText()
+        }
     }
 
-    fun addCommentMedia(sources: List<MediaSource>) = thread.addMedia(sources)
+    override fun sortComments(sort: CommentSort) = thread.setSort(sort)
 
-    fun removeCommentAttachment(id: String) = thread.removeAttachment(id)
+    override fun openReplies(comment: Comment) {
+        if (thread.openReplies(comment)) replyText.clearText()
+    }
 
-    fun sendComment() {
+    override fun closeReplies() = thread.closeReplies()
+
+    override fun replyTo(comment: Comment) {
+        if (thread.replyTo(comment)) replyText.clearText()
+    }
+
+    override fun clearReplyTarget() = thread.clearReplyTarget()
+
+    override fun voteComment(comment: Comment, vote: Vote) = thread.vote(comment, vote)
+
+    override fun sendComment() {
         if (thread.send(commentText.text.toString())) commentText.clearText()
     }
 
-    override fun onCleared() {
-        thread.discard()
+    override fun sendReply() {
+        if (thread.sendReply(replyText.text.toString())) replyText.clearText()
     }
 }
 

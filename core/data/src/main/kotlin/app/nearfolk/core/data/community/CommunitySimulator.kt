@@ -313,7 +313,7 @@ class CommunitySimulator @Inject internal constructor(
                 val comment = i % 2 == 1
                 if (comment) {
                     val text = SeedContent.comments[random.nextInt(SeedContent.comments.size)]
-                    comments.insertAll(listOf(CommentEntity(UUID.randomUUID().toString(), postId, person.id, text, now)))
+                    comments.insertAll(listOf(CommentEntity(UUID.randomUUID().toString(), postId, person.id, text, now, score = random.nextInt(3))))
                     posts.incrementComments(postId)
                     activity.insert(ActivityEntity(UUID.randomUUID().toString(), ActivityKind.Comment.name, person.id, postId, text, now, false))
                     notifyActivity(person.displayName, text, comment = true)
@@ -323,6 +323,45 @@ class CommunitySimulator @Inject internal constructor(
                     notifyActivity(person.displayName, null, comment = false)
                 }
             }
+        }
+    }
+
+    /**
+     * After you comment, a few people vote on it over the next minute, mostly
+     * likes. Sometimes someone answers in the thread, naming you when you had
+     * answered a reply yourself, as YouTube does.
+     */
+    fun onCommentCreated(commentId: String) {
+        scope.launch {
+            val mine = comments.get(commentId) ?: return@launch
+            repeat(1 + random.nextInt(4)) {
+                delay(random.nextLong(4_000, 15_000))
+                if (comments.get(commentId) == null) return@launch
+                comments.addScore(commentId, if (random.nextFloat() < 0.85f) 1 else -1)
+            }
+            if (random.nextFloat() >= 0.4f) return@launch
+            delay(random.nextLong(6_000, 25_000))
+            val person = members.others(SELF_ID).filter { it.discoverable && !safety.isBlocked(it.id) }.randomOrNull(random) ?: return@launch
+            if (posts.get(mine.postId) == null || comments.get(commentId) == null) return@launch
+            val text = SeedContent.replies[random.nextInt(SeedContent.replies.size)]
+            val now = time.now().toEpochMilli()
+            comments.insertAll(
+                listOf(
+                    CommentEntity(
+                        id = UUID.randomUUID().toString(),
+                        postId = mine.postId,
+                        authorId = person.id,
+                        text = text,
+                        createdAt = now,
+                        parentId = mine.parentId ?: mine.id,
+                        replyToId = if (mine.parentId != null) SELF_ID else null,
+                    ),
+                ),
+            )
+            posts.incrementComments(mine.postId)
+            activity.insert(ActivityEntity(UUID.randomUUID().toString(), ActivityKind.Reply.name, person.id, mine.postId, text, now, false))
+            val p = prefs.userPreferences.first()
+            if (p.notifyActivity && !visibility.foreground.value) notifier.showReply(person.displayName, text)
         }
     }
 

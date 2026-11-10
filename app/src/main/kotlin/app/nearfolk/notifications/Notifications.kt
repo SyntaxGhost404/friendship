@@ -110,6 +110,21 @@ class AndroidChatNotifier @Inject constructor(
         post(Notifications.activityId(), notification)
     }
 
+    override fun showReply(actorName: String, replyText: String) {
+        if (!allowed()) return
+        val intent = Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        val pending = PendingIntent.getActivity(context, Notifications.activityId(), intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val notification = NotificationCompat.Builder(context, Notifications.CHANNEL_ACTIVITY)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setColor(ContextCompat.getColor(context, R.color.notification_accent))
+            .setContentTitle(context.getString(R.string.notify_reply, actorName))
+            .setContentText(replyText)
+            .setAutoCancel(true)
+            .setContentIntent(pending)
+            .build()
+        post(Notifications.activityId(), notification)
+    }
+
     override fun cancel(conversationId: String) {
         manager.cancel(conversationId.hashCode())
     }

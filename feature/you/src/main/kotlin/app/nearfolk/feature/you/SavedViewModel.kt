@@ -9,8 +9,6 @@ import androidx.paging.cachedIn
 import app.nearfolk.core.data.repository.CommentThreadFactory
 import app.nearfolk.core.data.repository.PostRepository
 import app.nearfolk.core.model.Comment
-import app.nearfolk.core.model.DraftAttachment
-import app.nearfolk.core.model.MediaSource
 import app.nearfolk.core.model.Post
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Instant
@@ -22,6 +20,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import app.nearfolk.core.model.CommentSort
+import app.nearfolk.core.model.CommentsState
+import app.nearfolk.core.model.Vote
+import app.nearfolk.core.ui.CommentsHost
 
 sealed interface SavedEvent {
     /** A post left the list. [savedAt] puts it back in the same place. */
@@ -32,7 +34,7 @@ sealed interface SavedEvent {
 class SavedPostsViewModel @Inject constructor(
     private val posts: PostRepository,
     threads: CommentThreadFactory,
-) : ViewModel() {
+) : ViewModel(), CommentsHost {
 
     val saved: Flow<PagingData<Post>> = posts.saved().cachedIn(viewModelScope)
     val count: StateFlow<Int?> = posts.savedCount().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
@@ -41,11 +43,40 @@ class SavedPostsViewModel @Inject constructor(
     val events = _events.receiveAsFlow()
 
     private val thread = threads.create(viewModelScope)
-    val commentsPostId: StateFlow<String?> = thread.postId
-    val comments: StateFlow<List<Comment>> = thread.comments
-    val commentText = TextFieldState()
-    val commentAttachments: StateFlow<List<DraftAttachment>> = thread.attachments
-    val attachmentProblems = thread.problems
+    val commentsState: StateFlow<CommentsState> = thread.state
+    override val commentText = TextFieldState()
+    override val replyText = TextFieldState()
+
+    override fun openComments(postId: String?) {
+        if (thread.open(postId)) {
+            commentText.clearText()
+            replyText.clearText()
+        }
+    }
+
+    override fun sortComments(sort: CommentSort) = thread.setSort(sort)
+
+    override fun openReplies(comment: Comment) {
+        if (thread.openReplies(comment)) replyText.clearText()
+    }
+
+    override fun closeReplies() = thread.closeReplies()
+
+    override fun replyTo(comment: Comment) {
+        if (thread.replyTo(comment)) replyText.clearText()
+    }
+
+    override fun clearReplyTarget() = thread.clearReplyTarget()
+
+    override fun voteComment(comment: Comment, vote: Vote) = thread.vote(comment, vote)
+
+    override fun sendComment() {
+        if (thread.send(commentText.text.toString())) commentText.clearText()
+    }
+
+    override fun sendReply() {
+        if (thread.sendReply(replyText.text.toString())) replyText.clearText()
+    }
 
     fun toggleLike(postId: String) {
         viewModelScope.launch { posts.toggleLike(postId) }
@@ -69,20 +100,4 @@ class SavedPostsViewModel @Inject constructor(
     }
 
     fun recordView(postId: String) = posts.recordView(postId)
-
-    fun openComments(postId: String?) {
-        if (thread.open(postId)) commentText.clearText()
-    }
-
-    fun addCommentMedia(sources: List<MediaSource>) = thread.addMedia(sources)
-
-    fun removeCommentAttachment(id: String) = thread.removeAttachment(id)
-
-    fun sendComment() {
-        if (thread.send(commentText.text.toString())) commentText.clearText()
-    }
-
-    override fun onCleared() {
-        thread.discard()
-    }
 }

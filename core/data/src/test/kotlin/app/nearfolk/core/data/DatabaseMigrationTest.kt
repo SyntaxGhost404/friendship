@@ -50,7 +50,7 @@ class DatabaseMigrationTest {
             val convo = room.conversationDao().get("c1")!!
             assertEquals("[]", convo.lastMessageAttachments)
             assertEquals("[]", room.commentDao().forPost("p1").single().attachments)
-            assertEquals(3, room.openHelper.readableDatabase.version)
+            assertEquals(4, room.openHelper.readableDatabase.version)
         } finally {
             room.close()
             context.deleteDatabase(name)
@@ -101,6 +101,30 @@ class DatabaseMigrationTest {
             assertEquals(2, post.saveCount)
             assertEquals(1, post.shareCount)
             assertEquals(null, post.savedAt)
+        } finally {
+            room.close()
+            context.deleteDatabase(name)
+        }
+    }
+
+    @Test
+    fun version3CommentsBecomeTopLevelWithNoVotes() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val name = "migration_${System.nanoTime()}.db"
+        val file = context.getDatabasePath(name).apply { parentFile?.mkdirs() }
+        SQLiteDatabase.openOrCreateDatabase(file, null).use { db ->
+            createSchema(db, 3)
+            db.execSQL("INSERT INTO comments (id, postId, authorId, text, createdAt, attachments) VALUES ('k1', 'p1', 'm1', 'nice', 3, '[]')")
+        }
+
+        val room = Room.databaseBuilder(context, NearfolkDatabase::class.java, name).allowMainThreadQueries().build()
+        try {
+            val comment = room.commentDao().get("k1")!!
+            assertEquals("nice", comment.text)
+            assertEquals(null, comment.parentId)
+            assertEquals(null, comment.replyToId)
+            assertEquals(0, comment.score)
+            assertEquals(0, comment.myVote)
         } finally {
             room.close()
             context.deleteDatabase(name)

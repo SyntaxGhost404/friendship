@@ -35,5 +35,8 @@ interface ChatNotifier {
     fun showMessage(conversationId: String, senderName: String, text: String, isRequest: Boolean)
     /** [commentText] is null for a like. */
     fun showActivity(actorName: String, commentText: String?)
+
+    /** Someone answered one of your comments. */
+    fun showReply(actorName: String, replyText: String) = showActivity(actorName, replyText)
     fun cancel(conversationId: String)
 }

@@ -44,13 +44,15 @@ import app.nearfolk.core.database.entity.ReportEntity
         ReportEntity::class,
         ActivityEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
     autoMigrations = [
         // 2: attachments on messages and comments, and on the inbox preview.
         AutoMigration(from = 1, to = 2),
         // 3: view, save and share counts on posts, and your saved posts.
         AutoMigration(from = 2, to = 3, spec = NearfolkDatabase.PostStatsBackfill::class),
+        // 4: reply threads and like and dislike scores on comments.
+        AutoMigration(from = 3, to = 4),
     ],
 )
 abstract class NearfolkDatabase : RoomDatabase() {

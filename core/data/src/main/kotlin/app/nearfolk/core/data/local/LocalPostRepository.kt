@@ -12,12 +12,8 @@ import app.nearfolk.core.data.media.MediaFiles
 import app.nearfolk.core.data.repository.PostRepository
 import app.nearfolk.core.data.repository.PostStats
 import app.nearfolk.core.database.NearfolkDatabase
-import app.nearfolk.core.database.entity.CommentEntity
 import app.nearfolk.core.database.entity.PostEntity
 import app.nearfolk.core.model.ActivityItem
-import app.nearfolk.core.model.Attachment
-import app.nearfolk.core.model.AttachmentLimits
-import app.nearfolk.core.model.Comment
 import app.nearfolk.core.model.MediaRef
 import app.nearfolk.core.model.Post
 import app.nearfolk.core.model.ProfileRules
@@ -104,8 +100,6 @@ internal class LocalPostRepository @Inject constructor(
 
     override fun post(id: String): Flow<Post?> = posts.observe(id).map { it?.toModel() }
 
-    override fun comments(postId: String): Flow<List<Comment>> = comments.observe(postId).map { rows -> rows.map { it.toModel() } }
-
     override fun stats(authorId: String): Flow<PostStats> = combine(
         posts.observeCount(authorId),
         posts.observeLikeTotal(authorId),
@@ -113,20 +107,6 @@ internal class LocalPostRepository @Inject constructor(
     ) { count, likes, highlights -> PostStats(count, likes, highlights.size) }
 
     override suspend fun toggleLike(postId: String) = posts.toggleLike(postId)
-
-    override suspend fun addComment(postId: String, text: String, attachments: List<Attachment>) {
-        val clean = text.trim().take(ProfileRules.COMMENT_MAX)
-        val files = attachments.take(AttachmentLimits.PER_MESSAGE)
-        if (clean.isEmpty() && files.isEmpty()) return
-        db.withTransaction {
-            comments.insertAll(
-                listOf(
-                    CommentEntity(UUID.randomUUID().toString(), postId, SELF_ID, clean, time.now().toEpochMilli(), AttachmentCodec.encode(files)),
-                ),
-            )
-            posts.incrementComments(postId)
-        }
-    }
 
     override suspend fun createPost(caption: String, mediaPath: String?) {
         val id = UUID.randomUUID().toString()

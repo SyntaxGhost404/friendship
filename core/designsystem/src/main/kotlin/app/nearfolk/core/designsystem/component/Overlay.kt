@@ -8,6 +8,7 @@ import android.view.Window
 import android.view.WindowManager
 import androidx.activity.ComponentDialog
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.LocalOverscrollFactory
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
@@ -105,7 +106,8 @@ fun Modifier.shapeSurface(
  * the system from scaling or fading the surface behind our back.
  *
  * Back and Escape call [onDismissRequest]. The window stays until the caller
- * removes this composable.
+ * removes this composable. A `BackHandler` inside [content] runs first, so a
+ * popup with pages of its own can step back through them.
  */
 @Composable
 fun NfOverlayWindow(onDismissRequest: () -> Unit, content: @Composable () -> Unit) {
@@ -117,9 +119,13 @@ fun NfOverlayWindow(onDismissRequest: () -> Unit, content: @Composable () -> Uni
     val id = rememberSaveable { UUID.randomUUID() }
     val host = remember(view) {
         OverlayHost(view, id, onDismissRequest, layoutDirection, lightBars).apply {
+            val host = this
             setContent(parent) {
-                Box(Modifier.semantics { dialog() }) {
-                    NfPopupContent { currentContent() }
+                // Back presses arrive at this window, not at the screen behind it.
+                CompositionLocalProvider(LocalOnBackPressedDispatcherOwner provides host) {
+                    Box(Modifier.semantics { dialog() }) {
+                        NfPopupContent { currentContent() }
+                    }
                 }
             }
         }

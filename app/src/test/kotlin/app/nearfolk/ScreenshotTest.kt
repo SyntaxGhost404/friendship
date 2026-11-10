@@ -101,7 +101,7 @@ class ScreenshotTest {
             state = DiscoverUiState(loading = false, members = Fixtures.members, onlineCount = 2, filter = Fixtures.filter),
             query = "",
             refreshing = false,
-            onQuery = {}, onGender = {}, onApplyFilter = {}, onClearFilters = {}, onRefresh = {}, onOpenMember = {}, onOpenPlus = {},
+            onQuery = {}, onApplyFilter = {}, onClearFilters = {}, onRefresh = {}, onOpenMember = {}, onOpenPlus = {},
             now = Fixtures.now,
         )
     }

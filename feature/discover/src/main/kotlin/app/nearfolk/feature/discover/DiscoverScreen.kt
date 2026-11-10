@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -42,7 +41,6 @@ import app.nearfolk.core.designsystem.component.NfBottomSheet
 import app.nearfolk.core.designsystem.component.NfButton
 import app.nearfolk.core.designsystem.component.NfButtonSize
 import app.nearfolk.core.designsystem.component.NfButtonStyle
-import app.nearfolk.core.designsystem.component.NfChip
 import app.nearfolk.core.designsystem.component.NfCountBadge
 import app.nearfolk.core.designsystem.component.NfDivider
 import app.nearfolk.core.designsystem.component.NfEmptyState
@@ -83,7 +81,6 @@ fun DiscoverRouteScreen(
         query = query,
         refreshing = refreshing,
         onQuery = viewModel::setQuery,
-        onGender = viewModel::setGender,
         onApplyFilter = viewModel::applyFilter,
         onClearFilters = viewModel::clearFilters,
         onRefresh = viewModel::refresh,
@@ -105,7 +102,6 @@ fun DiscoverScreen(
     query: String,
     refreshing: Boolean,
     onQuery: (String) -> Unit,
-    onGender: (GenderFilter) -> Unit,
     onApplyFilter: (DiscoverFilter) -> Unit,
     onClearFilters: () -> Unit,
     onRefresh: () -> Unit,
@@ -121,8 +117,9 @@ fun DiscoverScreen(
         NfLargeHeader(stringResource(R.string.discover_title)) {
             Box {
                 NfIconButton(Icons.Rounded.Tune, stringResource(R.string.discover_filters), { showFilters = true }, style = NfButtonStyle.Secondary)
-                val extra = state.filter.copy(gender = GenderFilter.All).activeCount
-                if (extra > 0) NfCountBadge(extra, Modifier.align(Alignment.TopEnd).offset(x = 6.dp, y = (-6).dp))
+                // "Show me" lives in the sheet too, so every active filter counts here.
+                val active = state.filter.activeCount
+                if (active > 0) NfCountBadge(active, Modifier.align(Alignment.TopEnd).offset(x = 6.dp, y = (-6).dp))
             }
         }
         NfSearchField(
@@ -132,14 +129,7 @@ fun DiscoverScreen(
             clearDescription = stringResource(R.string.discover_search_clear),
             modifier = Modifier.padding(horizontal = 16.dp),
         )
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            items(GenderFilter.entries) { g ->
-                NfChip(stringResource(g.label()), selected = state.filter.gender == g, onClick = { onGender(g) })
-            }
-        }
+        Spacer(Modifier.height(8.dp))
         PullToRefreshBox(isRefreshing = refreshing, onRefresh = onRefresh, modifier = Modifier.weight(1f)) {
             when {
                 state.loading -> NfSpinner()

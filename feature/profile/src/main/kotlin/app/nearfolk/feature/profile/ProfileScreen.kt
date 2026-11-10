@@ -72,7 +72,6 @@ import app.nearfolk.core.model.Highlight
 import app.nearfolk.core.model.Member
 import app.nearfolk.core.model.Post
 import app.nearfolk.core.model.Presence
-import app.nearfolk.core.ui.AttachmentProblemMessages
 import app.nearfolk.core.ui.BlockDialog
 import app.nearfolk.core.ui.CommentsSheet
 import app.nearfolk.core.ui.LocalSnackbarHost
@@ -107,15 +106,15 @@ fun ProfileRouteScreen(
     onOpenChat: (String) -> Unit,
     onOpenJournal: (String) -> Unit,
     onOpenSaved: () -> Unit,
+    onOpenMember: (String) -> Unit,
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val posts = viewModel.postStream.collectAsLazyPagingItems()
     val playback by viewModel.playback.collectAsStateWithLifecycle()
-    val commentsPostId by viewModel.commentsPostId.collectAsStateWithLifecycle()
-    val comments by viewModel.comments.collectAsStateWithLifecycle()
-    val commentAttachments by viewModel.commentAttachments.collectAsStateWithLifecycle()
-    AttachmentProblemMessages(viewModel.attachmentProblems)
+    val commentsState by viewModel.commentsState.collectAsStateWithLifecycle()
+    // Hidden while this screen hands over to a profile. Back here, the sheet returns as it was.
+    var leavingForProfile by remember { mutableStateOf(false) }
     val snackbar = LocalSnackbarHost.current
     val context = LocalContext.current
     val resources = LocalResources.current
@@ -156,15 +155,20 @@ fun ProfileRouteScreen(
         onBlock = viewModel::block,
         onUnblock = viewModel::unblock,
     )
-    if (commentsPostId != null) {
+    if (commentsState.postId != null && !leavingForProfile) {
         CommentsSheet(
-            comments = comments,
-            text = viewModel.commentText,
-            attachments = commentAttachments,
-            onAddMedia = viewModel::addCommentMedia,
-            onRemoveAttachment = viewModel::removeCommentAttachment,
-            onDismiss = { viewModel.openComments(null) },
-            onSend = viewModel::sendComment,
+            state = commentsState,
+            host = viewModel,
+            onShare = { PostSharing.shareComment(context, it) },
+            onOpenProfile = { memberId ->
+                if (memberId == viewModel.memberId) {
+                    // Already on this profile: just close the sheet.
+                    viewModel.openComments(null)
+                } else {
+                    leavingForProfile = true
+                    onOpenMember(memberId)
+                }
+            },
         )
     }
     statsFor?.let { id ->

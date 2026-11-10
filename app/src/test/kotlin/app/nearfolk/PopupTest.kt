@@ -28,6 +28,8 @@ import app.nearfolk.core.designsystem.component.NfConfirmDialog
 import app.nearfolk.core.designsystem.component.NfIconButton
 import app.nearfolk.core.designsystem.theme.Nf
 import app.nearfolk.core.designsystem.theme.NearfolkTheme
+import app.nearfolk.core.model.CommentsState
+import app.nearfolk.core.ui.CommentsSheet
 import app.nearfolk.core.ui.CountryPickerSheet
 import app.nearfolk.core.ui.MenuAction
 import app.nearfolk.core.ui.NfDatePickerDialog
@@ -170,6 +172,29 @@ class PopupTest {
             )
         }
         capture("confirm_dialog_${if (dark) "dark" else "light"}")
+    }
+
+    private val commentsState = CommentsState(
+        postId = "p1",
+        postAuthorId = Fixtures.amara.id,
+        total = 8,
+        loading = false,
+        threads = Fixtures.comments,
+    )
+
+    @Test
+    fun commentsDark() {
+        show(true) { CommentsSheet(commentsState, FakeCommentsHost(), onShare = {}, onOpenProfile = {}) }
+        rule.onNodeWithText("3 replies").assertIsDisplayed()
+        capture("comments_dark")
+    }
+
+    @Test
+    fun repliesLight() {
+        val thread = commentsState.copy(openThread = Fixtures.comments.first(), replies = Fixtures.replies, replyingTo = Fixtures.replies[0])
+        show(false) { CommentsSheet(thread, FakeCommentsHost(), onShare = {}, onOpenProfile = {}) }
+        rule.onNodeWithText("Replies").assertIsDisplayed()
+        capture("replies_light")
     }
 
     @Test

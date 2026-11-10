@@ -218,6 +218,7 @@ fun MainScaffold(viewModel: MainViewModel) {
                         onOpenChat = { nav.navigate(ChatRoute(it)) { launchSingleTop = true } },
                         onOpenJournal = { nav.navigate(PublicJournalRoute(it)) },
                         onOpenSaved = { nav.navigate(SavedPostsRoute) { launchSingleTop = true } },
+                        onOpenMember = { nav.navigate(MemberProfileRoute(it)) },
                     )
                 }
                 composable<ChatRoute> {
@@ -248,6 +249,7 @@ fun MainScaffold(viewModel: MainViewModel) {
                         onBack = nav::back,
                         onNewPost = { nav.navigate(ComposePostRoute) },
                         onOpenSaved = { nav.navigate(SavedPostsRoute) { launchSingleTop = true } },
+                        onOpenMember = { nav.navigate(MemberProfileRoute(it)) },
                     )
                 }
                 composable<SavedPostsRoute> {

@@ -16,8 +16,6 @@ import app.nearfolk.core.data.repository.MemberRepository
 import app.nearfolk.core.data.repository.PostRepository
 import app.nearfolk.core.data.repository.ProfileRepository
 import app.nearfolk.core.model.Comment
-import app.nearfolk.core.model.DraftAttachment
-import app.nearfolk.core.model.MediaSource
 import app.nearfolk.core.model.Highlight
 import app.nearfolk.core.model.Member
 import app.nearfolk.core.model.Post
@@ -34,6 +32,10 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import app.nearfolk.core.model.CommentSort
+import app.nearfolk.core.model.CommentsState
+import app.nearfolk.core.model.Vote
+import app.nearfolk.core.ui.CommentsHost
 
 data class ProfileUiState(
     val loading: Boolean = true,
@@ -59,7 +61,7 @@ class ProfileViewModel @Inject constructor(
     private val chat: ChatRepository,
     private val player: VoicePlayer,
     threads: CommentThreadFactory,
-) : ViewModel() {
+) : ViewModel(), CommentsHost {
     private val route = savedStateHandle.toRoute<MemberProfileRoute>()
     val memberId: String = route.memberId
     private val isSelf = memberId == SELF_ID
@@ -80,8 +82,40 @@ class ProfileViewModel @Inject constructor(
     val playback: StateFlow<PlaybackState> = player.state
 
     private val thread = threads.create(viewModelScope)
-    val commentsPostId: StateFlow<String?> = thread.postId
-    val comments: StateFlow<List<Comment>> = thread.comments
+    val commentsState: StateFlow<CommentsState> = thread.state
+    override val commentText = TextFieldState()
+    override val replyText = TextFieldState()
+
+    override fun openComments(postId: String?) {
+        if (thread.open(postId)) {
+            commentText.clearText()
+            replyText.clearText()
+        }
+    }
+
+    override fun sortComments(sort: CommentSort) = thread.setSort(sort)
+
+    override fun openReplies(comment: Comment) {
+        if (thread.openReplies(comment)) replyText.clearText()
+    }
+
+    override fun closeReplies() = thread.closeReplies()
+
+    override fun replyTo(comment: Comment) {
+        if (thread.replyTo(comment)) replyText.clearText()
+    }
+
+    override fun clearReplyTarget() = thread.clearReplyTarget()
+
+    override fun voteComment(comment: Comment, vote: Vote) = thread.vote(comment, vote)
+
+    override fun sendComment() {
+        if (thread.send(commentText.text.toString())) commentText.clearText()
+    }
+
+    override fun sendReply() {
+        if (thread.sendReply(replyText.text.toString())) replyText.clearText()
+    }
 
     private val _events = Channel<ProfileEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
@@ -100,23 +134,6 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun recordView(postId: String) = postRepository.recordView(postId)
-
-    /** Comment being written for the open post. */
-    val commentText = TextFieldState()
-    val commentAttachments: StateFlow<List<DraftAttachment>> = thread.attachments
-    val attachmentProblems = thread.problems
-
-    fun openComments(postId: String?) {
-        if (thread.open(postId)) commentText.clearText()
-    }
-
-    fun addCommentMedia(sources: List<MediaSource>) = thread.addMedia(sources)
-
-    fun removeCommentAttachment(id: String) = thread.removeAttachment(id)
-
-    fun sendComment() {
-        if (thread.send(commentText.text.toString())) commentText.clearText()
-    }
 
     fun toggleVoice() {
         state.value.member?.voiceIntro?.let { player.toggle(it.path) }
@@ -141,7 +158,6 @@ class ProfileViewModel @Inject constructor(
     }
 
     override fun onCleared() {
-        thread.discard()
         if (player.state.value.path == state.value.member?.voiceIntro?.path) player.stop()
     }
 }

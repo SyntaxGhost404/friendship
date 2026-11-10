@@ -44,7 +44,8 @@ import kotlin.math.abs
  * Drives the real app: dependency graph, database, preferences, navigation
  * and the local community. Creates a profile, finds a member with a misspelt
  * search, opens their profile, sends a message and waits for it to be read,
- * then comments on, saves and shares a post in the feed and opens its author's profile.
+ * then comments on a post in the feed, likes and replies to a comment, opens a
+ * commenter's profile, saves and shares a post and opens its author's profile.
  */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(AndroidJUnit4::class)
@@ -159,13 +160,37 @@ class AppFlowTest {
         rule.waitUntilAtLeastOneExists(hasTestTag(FeedTags.List), 10_000)
         rule.onRoot().captureRoboImage("build/screenshots/flow_4_feed.png")
 
-        // Comments open in a sheet and a new comment shows up in it.
+        // Comments open in a sheet. They are text only: no attachment button.
         rule.onAllNodes(hasContentDescription("Comments") and hasClickAction()).onFirst().performClick()
         waitForText("Add a comment")
+        rule.onNodeWithContentDescription("Add photos, videos or GIFs").assertDoesNotExist()
         rule.onNode(hasSetTextAction()).performTextInput("Lovely light in this one.")
         rule.onNodeWithContentDescription("Send").performClick()
         waitForText("Lovely light in this one.")
         captureScreenRoboImage("build/screenshots/flow_5_feed_comments.png")
+
+        // Liking a comment fills the thumb; pressing again takes it back.
+        rule.onAllNodes(hasContentDescription("Like comment") and hasClickAction()).onFirst().performClick()
+        rule.waitUntilAtLeastOneExists(hasContentDescription("Remove your like"), 5_000)
+
+        // Reply opens the thread with the reply box ready; the reply lands in it.
+        rule.onAllNodes(hasContentDescription("Reply") and hasClickAction()).onFirst().performClick()
+        waitForText("Add a reply")
+        rule.onNode(hasSetTextAction()).performTextInput("Thanks for reading.")
+        rule.onNodeWithContentDescription("Send").performClick()
+        waitForText("Thanks for reading.")
+        captureScreenRoboImage("build/screenshots/flow_5b_replies.png")
+
+        // Back steps out of the thread first, which now shows its reply count.
+        Espresso.pressBack()
+        waitForText("1 reply")
+        waitForText("Add a comment")
+
+        // A commenter's name opens their profile; back returns to the comments as they were.
+        rule.onNode(hasText("Rae") and hasClickAction()).performClick()
+        waitForText("This is how other people see your profile.")
+        Espresso.pressBack()
+        waitForText("Add a comment")
         Espresso.pressBack()
         rule.waitUntil(5_000) { rule.onAllNodesWithText("Add a comment").fetchSemanticsNodes().isEmpty() }
 

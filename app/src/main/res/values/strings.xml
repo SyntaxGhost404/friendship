@@ -9,8 +9,9 @@
     <string name="channel_messages">Messages</string>
     <string name="channel_messages_body">New messages and chat requests</string>
     <string name="channel_activity">Activity</string>
-    <string name="channel_activity_body">Likes and comments on your posts</string>
+    <string name="channel_activity_body">Likes and comments on your posts, and replies to your comments</string>
     <string name="notify_request">New chat request</string>
     <string name="notify_like">%1$s liked your post</string>
     <string name="notify_comment">%1$s commented on your post</string>
+    <string name="notify_reply">%1$s replied to your comment</string>
 </resources>

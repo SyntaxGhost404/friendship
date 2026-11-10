@@ -7,7 +7,6 @@ import app.nearfolk.core.data.repository.MemberRepository
 import app.nearfolk.core.data.repository.PlusRepository
 import app.nearfolk.core.data.repository.PreferencesRepository
 import app.nearfolk.core.model.DiscoverFilter
-import app.nearfolk.core.model.GenderFilter
 import app.nearfolk.core.model.Member
 import app.nearfolk.core.model.Presence
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -79,8 +78,6 @@ class DiscoverViewModel @Inject constructor(
     fun setQuery(value: String) {
         query.value = value
     }
-
-    fun setGender(gender: GenderFilter) = update { it.copy(gender = gender) }
 
     fun applyFilter(filter: DiscoverFilter) = update { filter }
 

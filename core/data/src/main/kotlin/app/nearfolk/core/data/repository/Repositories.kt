@@ -24,6 +24,7 @@ import app.nearfolk.core.model.SendResult
 import app.nearfolk.core.model.ThemeMode
 import app.nearfolk.core.model.UserPreferences
 import app.nearfolk.core.model.Visibility
+import app.nearfolk.core.model.Vote
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import java.time.Instant
@@ -118,15 +119,37 @@ interface PostRepository {
     suspend fun recordShare(postId: String)
     fun allPosts(authorId: String): Flow<List<Post>>
     fun post(id: String): Flow<Post?>
-    fun comments(postId: String): Flow<List<Comment>>
     fun stats(authorId: String): Flow<PostStats>
     suspend fun toggleLike(postId: String)
-    suspend fun addComment(postId: String, text: String, attachments: List<Attachment> = emptyList())
     suspend fun createPost(caption: String, mediaPath: String?)
     suspend fun deletePost(id: String)
     fun activity(): Flow<List<ActivityItem>>
     fun unseenActivityCount(): Flow<Int>
     suspend fun markActivitySeen()
+}
+
+/**
+ * Comments on posts. Threads are two levels deep, as on YouTube: top-level
+ * comments, and under each one a flat list of replies, oldest first.
+ */
+interface CommentRepository {
+    /** Top-level comments of a post, oldest first, each with its reply count. */
+    fun topLevel(postId: String): Flow<List<Comment>>
+
+    /** The replies under the top-level comment [commentId], oldest first. */
+    fun replies(commentId: String): Flow<List<Comment>>
+
+    fun comment(id: String): Flow<Comment?>
+
+    /**
+     * Adds a text comment. With [replyTo] it joins that comment's thread
+     * instead: a reply to a reply sits under the same top-level comment and
+     * names the person it answers.
+     */
+    suspend fun add(postId: String, text: String, replyTo: Comment? = null)
+
+    /** Likes or dislikes a comment. Giving the vote you already gave takes it back. */
+    suspend fun vote(commentId: String, vote: Vote)
 }
 
 interface ChatRepository {

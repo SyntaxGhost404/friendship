@@ -23,6 +23,7 @@ import app.nearfolk.core.model.Member
 import app.nearfolk.core.model.Message
 import app.nearfolk.core.model.Mood
 import app.nearfolk.core.model.Post
+import app.nearfolk.core.model.Vote
 import app.nearfolk.core.model.Presence
 import app.nearfolk.core.model.Visibility
 import app.nearfolk.core.model.VoiceIntro
@@ -85,6 +86,12 @@ internal fun CommentRow.toModel() = Comment(
     text = text,
     createdAt = Instant.ofEpochMilli(createdAt),
     attachments = AttachmentCodec.decode(attachments),
+    parentId = parentId,
+    replyToId = replyToId,
+    replyToName = replyToName,
+    score = score,
+    myVote = Vote.of(myVote),
+    replyCount = replyCount,
 )
 
 internal fun ActivityRow.toModel() = ActivityItem(

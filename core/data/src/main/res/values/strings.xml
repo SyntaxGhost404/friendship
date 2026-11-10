@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="data_share_title">Share post</string>
+    <string name="data_share_comment_title">Share comment</string>
     <!-- 1: author name, 2: app name, 3: the post text -->
     <string name="data_share_text">%1$s on %2$s: %3$s</string>
     <!-- 1: author name, 2: app name -->

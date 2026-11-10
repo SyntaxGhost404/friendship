@@ -110,6 +110,24 @@ internal object SeedContent {
         "That sounds like a perfect day.",
     )
 
+    /** Answers in a comment thread, to the comment or to someone else's reply. */
+    val replies = listOf(
+        "Same here, every single week.",
+        "Ha, exactly this.",
+        "You should go back in spring, it is even better.",
+        "Right? I keep thinking about it.",
+        "Thank you, that means a lot.",
+        "Saving this for later.",
+        "How did you find it?",
+        "Count me in next time.",
+        "That made my morning.",
+        "Agreed, the light was perfect.",
+        "Stealing this idea.",
+        "I said the same thing to a friend yesterday.",
+        "Took me a while to get there too.",
+        "Fair point, I had not thought of it that way.",
+    )
+
     data class JournalSeed(val title: String, val body: String, val mood: Mood)
 
     val journals = listOf(
